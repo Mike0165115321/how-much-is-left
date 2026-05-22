@@ -1,0 +1,34 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist", "IBM Plex Sans Thai", system-ui, -apple-system, sans-serif;
+  --font-body: "Geist", "IBM Plex Sans Thai", system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", SFMono-Regular, monospace;
+}
+
+body {
+  background-color: #000000 !important;
+  color: #e2e2e2;
+  font-family: var(--font-sans);
+  margin: 0;
+  padding: 0;
+}
+
+/* Hide scrollbar for category selector row */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Flash active text input cursor */
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+.cursor-blink {
+  animation: blink 1.2s step-end infinite;
+}

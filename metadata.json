@@ -1,0 +1,6 @@
+{
+  "name": "How Much Is Left",
+  "description": "A minimalist, responsive mobile web application to track net balance, log transactions, allocate lump sums, and track goals.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
