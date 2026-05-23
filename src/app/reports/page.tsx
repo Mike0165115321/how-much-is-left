@@ -355,126 +355,108 @@ export default function ReportsPage() {
       </header>
 
       {/* Main Stats Scrollable container */}
-      <main className="flex-grow px-4 py-3 sm:px-6 sm:py-4 max-w-2xl mx-auto w-full flex flex-col gap-5 sm:gap-8">
+      <main className="flex-grow px-4 py-2 sm:px-6 sm:py-4 max-w-2xl mx-auto w-full flex flex-col gap-3 sm:gap-6">
         
-        {/* SECTION 1: Combined Category Donut Chart representation */}
-        <section className="flex flex-col items-center justify-center py-3 sm:py-4 bg-[#121212]/30 border border-zinc-900 rounded-2xl p-4 sm:p-6 w-full">
-          <div className="relative w-48 h-48 sm:w-60 sm:h-60 flex items-center justify-center">
-            {/* Elegant, dynamic SVG circle representation for maximum responsive sizing and design accuracy */}
-            <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-              <circle
-                cx="50"
-                cy="50"
-                r="38"
-                strokeWidth="10"
-                stroke="#1c1c1e"
-                fill="transparent"
-              />
-              {/* Calculate and draw segment strokes dynamically */}
-              {donutSegments.map((seg) => (
-                <circle
-                  key={seg.id}
-                  cx="50"
-                  cy="50"
-                  r="38"
-                  strokeWidth="10"
-                  stroke={seg.color}
-                  strokeDasharray={seg.strokeDasharray}
-                  strokeDashoffset={seg.strokeDashoffset}
-                  strokeLinecap="butt"
-                  fill="transparent"
-                  className="transition-all duration-1000 ease-in-out"
-                />
-              ))}
-            </svg>
+        {/* SECTION 1: Compact donut + stats row */}
+        <section className="bg-[#121212]/30 border border-zinc-900 rounded-2xl p-3 sm:p-5 w-full">
+          {/* Row: donut (left) + net/income/expense (right) */}
+          <div className="flex items-center gap-3">
+            {/* Compact Donut */}
+            <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
+              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="38" strokeWidth="12" stroke="#1c1c1e" fill="transparent" />
+                {donutSegments.map((seg) => (
+                  <circle
+                    key={seg.id}
+                    cx="50" cy="50" r="38"
+                    strokeWidth="12"
+                    stroke={seg.color}
+                    strokeDasharray={seg.strokeDasharray}
+                    strokeDashoffset={seg.strokeDashoffset}
+                    strokeLinecap="butt"
+                    fill="transparent"
+                    className="transition-all duration-1000 ease-in-out"
+                  />
+                ))}
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className="text-[8px] uppercase tracking-widest text-zinc-500 font-bold leading-tight">
+                  {language === 'TH' ? 'คงเหลือ' : 'Net'}
+                </span>
+                <span className={`font-mono text-sm font-bold tracking-tight ${
+                  financialStats.netFlow >= 0 ? 'text-[#4edea3]' : 'text-[#ff7875]'
+                }`}>
+                  {financialStats.netFlow >= 0 ? '+' : ''}{formatCurrency(financialStats.netFlow)}
+                </span>
+              </div>
+            </div>
 
-            {/* Core textual balance indicators */}
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-[10px] sm:text-[10.5px] uppercase tracking-widest text-zinc-500 font-bold">
-                {language === 'TH' ? 'คงเหลือสุทธิ' : 'Net Flow'}
-              </span>
-              <span className={`font-mono text-xl sm:text-2xl font-bold tracking-tight mt-0.5 sm:mt-1 ${
-                financialStats.netFlow >= 0 ? 'text-[#4edea3]' : 'text-[#ff7875]'
-              }`}>
-                {financialStats.netFlow >= 0 ? '+' : ''}{formatCurrency(financialStats.netFlow)}
-              </span>
+            {/* Stats stack (right side) */}
+            <div className="flex-1 flex flex-col gap-2">
+              <div className="bg-[#121212] border border-zinc-900 rounded-xl px-3 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <ArrowUpRight className="w-3.5 h-3.5 text-[#4edea3]" />
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">
+                    {language === 'TH' ? 'รายรับ' : 'Income'}
+                  </span>
+                </div>
+                <span className="font-mono text-sm font-bold text-[#4edea3]">
+                  {formatCurrency(financialStats.totalInc)}
+                </span>
+              </div>
+              <div className="bg-[#121212] border border-zinc-900 rounded-xl px-3 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <ArrowDownLeft className="w-3.5 h-3.5 text-[#ff7875]" />
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">
+                    {language === 'TH' ? 'รายจ่าย' : 'Expense'}
+                  </span>
+                </div>
+                <span className="font-mono text-sm font-bold text-[#ff7875]">
+                  {formatCurrency(financialStats.totalExp)}
+                </span>
+              </div>
             </div>
           </div>
 
-          {/* Sleek 2-column card below the chart showing Total Income and Total Expense side-by-side */}
-          <div className="grid grid-cols-2 gap-3 w-full mt-4 border-t border-zinc-900 pt-4">
-            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-3 flex flex-col gap-1 items-center justify-center">
-              <div className="flex items-center gap-1.5 text-[#4edea3]">
-                <ArrowUpRight className="w-4 h-4" />
-                <span className="text-[10.5px] uppercase tracking-wider font-bold text-zinc-400">
-                  {language === 'TH' ? 'รายรับรวม' : 'Total Income'}
-                </span>
-              </div>
-              <span className="font-mono text-base sm:text-lg font-bold text-[#4edea3] mt-0.5">
-                {formatCurrency(financialStats.totalInc)}
-              </span>
-            </div>
-            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-3 flex flex-col gap-1 items-center justify-center">
-              <div className="flex items-center gap-1.5 text-[#ff7875]">
-                <ArrowDownLeft className="w-4 h-4" />
-                <span className="text-[10.5px] uppercase tracking-wider font-bold text-zinc-400">
-                  {language === 'TH' ? 'รายจ่ายรวม' : 'Total Expense'}
-                </span>
-              </div>
-              <span className="font-mono text-base sm:text-lg font-bold text-[#ff7875] mt-0.5">
-                {formatCurrency(financialStats.totalExp)}
-              </span>
-            </div>
-          </div>
-
-          {/* Consolidated Category Breakdown List */}
-          <div className="w-full flex flex-col gap-2.5 mt-4">
-            <h3 className="text-sm font-bold tracking-wide text-zinc-300 mb-0.5 self-start">
-              {language === 'TH' ? 'สัดส่วนตามหมวดหมู่' : 'Category Breakdown'}
+          {/* Category Breakdown — slim progress-bar rows */}
+          <div className="w-full flex flex-col gap-1.5 mt-3 pt-3 border-t border-zinc-900">
+            <h3 className="text-[11px] font-bold tracking-wide text-zinc-400 uppercase mb-1">
+              {language === 'TH' ? 'สัดส่วนหมวดหมู่' : 'Breakdown'}
             </h3>
             {financialStats.breakdown.length === 0 ? (
-              <div className="bg-[#121212] border border-zinc-900 rounded-xl p-4 text-center text-xs text-zinc-550 w-full">
-                {language === 'TH' ? 'ยังไม่มีข้อมูลช่วงเวลานี้' : 'No transactions recorded for this period.'}
-              </div>
+              <p className="text-xs text-zinc-600 text-center py-2">
+                {language === 'TH' ? 'ยังไม่มีข้อมูล' : 'No data yet.'}
+              </p>
             ) : (
-              <div className="flex flex-col gap-2 w-full">
-                {financialStats.breakdown.map((item) => (
-                  <div 
-                    key={`${item.type}-${item.id}`}
-                    className="bg-[#121212]/50 border border-zinc-900 rounded-xl p-2.5 flex items-center justify-between transition-all hover:border-zinc-800"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-850 flex items-center justify-center text-xl shadow-inner">
-                        {item.emoji}
-                      </div>
-                      <div className="flex flex-col gap-0.5">
-                        <span className="text-sm font-semibold text-zinc-200">
-                          {language === 'TH' ? item.nameTH : item.nameEN}
-                        </span>
-                        <div className="flex items-center gap-2">
-                          <span className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${
-                            item.type === 'income' 
-                              ? 'bg-[#4edea3]/10 text-[#4edea3] border border-[#4edea3]/20' 
-                              : 'bg-[#ff7875]/10 text-[#ff7875] border border-[#ff7875]/20'
-                          }`}>
-                            {item.type === 'income' 
-                              ? (language === 'TH' ? 'รายรับ' : 'INCOME') 
-                              : (language === 'TH' ? 'รายจ่าย' : 'EXPENSE')}
-                          </span>
-                          <span className="text-[10px] text-zinc-500 font-bold font-mono">
-                            {item.percentage}%
-                          </span>
-                        </div>
-                      </div>
+              financialStats.breakdown.map((item) => (
+                <div key={`${item.type}-${item.id}`} className="flex items-center gap-2">
+                  <span className="text-base w-6 text-center shrink-0">{item.emoji}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-baseline mb-0.5">
+                      <span className="text-[11px] font-semibold text-zinc-300 truncate">
+                        {language === 'TH' ? item.nameTH : item.nameEN}
+                      </span>
+                      <span className={`font-mono text-[11px] font-bold ml-2 shrink-0 ${
+                        item.type === 'income' ? 'text-[#4edea3]' : 'text-[#ff7875]'
+                      }`}>
+                        {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
+                      </span>
                     </div>
-                    <span className={`font-mono text-sm font-bold ${
-                      item.type === 'income' ? 'text-[#4edea3]' : 'text-[#ff7875]'
-                    }`}>
-                      {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
-                    </span>
+                    <div className="h-1 rounded-full bg-zinc-900 overflow-hidden">
+                      <div
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          width: `${item.percentage}%`,
+                          background: item.type === 'income' ? '#4edea3' : '#ff7875',
+                        }}
+                      />
+                    </div>
                   </div>
-                ))}
-              </div>
+                  <span className="text-[10px] text-zinc-600 font-mono w-7 text-right shrink-0">
+                    {item.percentage}%
+                  </span>
+                </div>
+              ))
             )}
           </div>
         </section>

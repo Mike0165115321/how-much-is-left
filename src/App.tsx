@@ -4,29 +4,15 @@ import {
   LayoutGrid, 
   Receipt, 
   BarChart3, 
-  MoreHorizontal, 
   X, 
   Edit2, 
-  Gift, 
-  Target, 
-  FolderPlus, 
-  RefreshCw,
-  Plus,
-  HelpCircle,
-  Laptop,
-  CheckCircle,
-  Lock,
-  Sparkles,
-  ArrowLeft
+  RefreshCw
 } from 'lucide-react';
 
 // Import our modular screen files
 import Dashboard from './app/page';
 import TransactionsPage from './app/transactions/page';
 import ReportsPage from './app/reports/page';
-import LumpSumsPage from './app/more/lump-sums/page';
-import GoalsPage from './app/more/goals/page';
-import CategoriesPage from './app/more/categories/page';
 
 export default function App() {
   const { 
@@ -223,55 +209,12 @@ export default function App() {
         return <TransactionsPage />;
       case 'reports':
         return <ReportsPage />;
-      case 'lump-sums':
-        return <LumpSumsPage />;
-      case 'goals':
-        return <GoalsPage />;
-      case 'categories':
-        return <CategoriesPage />;
-        
-      case 'settings':
-        return (
-          <div className="flex flex-col flex-1 pb-10 animate-in fade-in duration-150" id="settings_screen">
-            <header className="px-6 pt-6 pb-2 border-b border-zinc-905 sticky top-0 bg-black z-10">
-              <span className="text-zinc-500 text-[10px] uppercase tracking-widest font-mono">
-                {language === 'TH' ? 'ตั้งค่าระบบ' : 'Settings'}
-              </span>
-              <h1 className="text-2xl font-bold text-zinc-100 mt-1 tracking-tight">
-                {language === 'TH' ? 'การปรับแต่ง' : 'Preferences'}
-              </h1>
-            </header>
-
-            <main className="px-6 py-4 max-w-xl mx-auto w-full flex flex-col gap-3 mt-2">
-              {/* Category manager Card link */}
-              <button 
-                onClick={() => setCurrentScreen('categories')}
-                className="bg-[#121212] border border-zinc-900 hover:border-zinc-850 p-5 rounded-2xl flex items-center justify-between group transition-all text-left w-full cursor-pointer"
-              >
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-xl bg-cyan-950/20 border border-cyan-900/30 text-[#4edea3] flex items-center justify-center">
-                    <FolderPlus className="w-6 h-6" />
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="font-semibold text-zinc-200 text-sm">{language === 'TH' ? 'จัดการหมวดหมู่รายการ' : 'Category Management'}</span>
-                    <span className="text-xs text-zinc-500 mt-0.5">{language === 'TH' ? 'ปรับแต่งอีโมจิและชื่อหมวดพิเศษ' : 'Customize emojis and language lists'}</span>
-                  </div>
-                </div>
-              </button>
-
-
-            </main>
-          </div>
-        );
       default:
         return <div className="text-zinc-500 p-10 text-center">404 - Screen Not Found</div>;
     }
   };
 
-  // Check if viewing secondary screen (for back buttons representation on sub-screens)
-  const isSecondaryScreen = ['lump-sums', 'goals', 'categories', 'settings'].includes(currentScreen);
 
-  // Format modal amount readout nicely
   const getModalAmountFormatted = () => {
     if (txModalAmount === '0') return '0';
     const parts = txModalAmount.split('.');
@@ -282,20 +225,6 @@ export default function App() {
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col relative max-w-xl mx-auto border-x border-zinc-950/60 shadow-2xl bg-black">
       
-      {/* Top Mobile Bar representing customized context */}
-      {isSecondaryScreen && (
-        <div className="bg-black py-4 px-6 flex items-center justify-start sticky top-0 z-25 border-b border-zinc-950/60">
-          <button 
-            id="back_to_more_btn"
-            onClick={() => setCurrentScreen('dashboard')}
-            className="flex items-center gap-1.5 text-xs text-[#4edea3] font-bold py-1 px-3 bg-zinc-900 border border-zinc-800 rounded-full hover:border-[#4edea3]/40 active:scale-95 transition-all outline-none"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>{language === 'TH' ? 'กลับไปหน้าหลัก' : 'Back'}</span>
-          </button>
-        </div>
-      )}
-
       {/* Screen view target mounts */}
       <div className="flex-1 flex flex-col pb-26 overflow-x-hidden">
         {renderCurrentScreen()}

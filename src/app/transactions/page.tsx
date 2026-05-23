@@ -176,33 +176,51 @@ export default function TransactionsPage() {
             </select>
           </div>
 
-          {/* Extended Category Select pills */}
-          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-1">
+          {/* Extended Category Select pills — mobile-friendly horizontal pills */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+            {/* "All" pill */}
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`px-3 py-1 rounded-md text-[11px] font-medium transition-all ${
+              className={`flex items-center gap-2 px-4 h-11 rounded-2xl shrink-0 border transition-all duration-200 active:scale-95 ${
                 selectedCategory === 'all'
-                  ? 'bg-zinc-800 text-zinc-100 border border-zinc-700'
-                  : 'bg-zinc-950/40 text-zinc-500 border border-transparent hover:text-zinc-400'
+                  ? 'bg-zinc-100 border-zinc-100 shadow-[0_0_16px_rgba(255,255,255,0.15)]'
+                  : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
               }`}
             >
-              {language === 'TH' ? 'หมวดหมู่อื่นๆ: ทั้งหมด' : 'Category: All'}
+              <span className="text-lg leading-none">🗂️</span>
+              <span className={`text-[13px] font-bold tracking-tight ${
+                selectedCategory === 'all' ? 'text-black' : 'text-zinc-400'
+              }`}>
+                {language === 'TH' ? 'ทั้งหมด' : 'All'}
+              </span>
             </button>
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-3 py-1 rounded-md text-[11px] font-medium flex items-center gap-1 transition-all border ${
-                  selectedCategory === cat.id
-                    ? 'bg-zinc-900 text-zinc-100 border-zinc-700'
-                    : 'bg-zinc-950/40 text-zinc-500 border-transparent hover:text-zinc-400'
-                }`}
-                style={{ activeColor: cat.color }}
-              >
-                <span>{cat.emoji}</span>
-                <span>{language === 'TH' ? cat.nameTH : cat.nameEN}</span>
-              </button>
-            ))}
+
+            {/* Category pills */}
+            {categories.map((cat) => {
+              const isActive = selectedCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  onClick={() => setSelectedCategory(cat.id)}
+                  className={`flex items-center gap-2 px-4 h-11 rounded-2xl shrink-0 border transition-all duration-200 active:scale-95 ${
+                    isActive ? 'border-transparent' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                  }`}
+                  style={isActive ? {
+                    background: `${cat.color}1a`,
+                    borderColor: `${cat.color}55`,
+                    boxShadow: `0 0 16px ${cat.color}25`,
+                  } : {}}
+                >
+                  <span className="text-lg leading-none">{cat.emoji}</span>
+                  <span
+                    className="text-[13px] font-bold tracking-tight"
+                    style={{ color: isActive ? cat.color : '#a1a1aa' }}
+                  >
+                    {language === 'TH' ? cat.nameTH : cat.nameEN}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </header>
