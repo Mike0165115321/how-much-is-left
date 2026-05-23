@@ -276,78 +276,75 @@ export default function App() {
         </button>
       </nav>
 
-      {/* 
-         UNIVERSAL ADD TRANSACTION MODEL SECTION (Screen 2: Add Transaction Keypad Modal)
-         Avoid using native mobile OS keyboards via custom UI grids containing:
-         Segment toggle, large amount screen, scroll horizontal category, remarks, custom numpad.
-      */}
       {showAddTxModal && (
         <div 
           id="add_tx_modal_overlay"
-          className="fixed inset-0 bg-black z-50 flex flex-col justify-between max-w-xl mx-auto border-x border-zinc-950 p-6 shadow-2xl overflow-y-auto"
+          className="fixed inset-0 bg-black z-50 flex flex-col max-w-xl mx-auto border-x border-zinc-950 shadow-2xl"
         >
-          {/* Header Action Row */}
-          <header className="flex justify-between items-center h-12 w-full mt-2 shrink-0">
-            <button 
-              id="close_tx_modal_btn"
-              onClick={() => setShowAddTxModal(false)}
-              className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center active:scale-95 transition-all cursor-pointer"
-            >
-              <X className="w-5 h-5 text-zinc-400" />
-            </button>
-
-            <div className="bg-zinc-900 p-[3px] rounded-full flex relative border border-zinc-850 shadow-inner">
+          {/* ── STICKY TOP: close + toggle + amount ── */}
+          <div className="shrink-0 px-5 pt-4 pb-3 border-b border-zinc-900 bg-black">
+            {/* Row 1: close + toggle */}
+            <div className="flex justify-between items-center mb-3">
               <button 
-                type="button"
-                onClick={() => { 
-                  setTxModalType('expense'); 
-                  setTxModalCategoryId('cat-food'); 
-                }}
-                className={`relative z-10 px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
-                  txModalType === 'expense' ? 'bg-zinc-800 text-[#ff7875] shadow' : 'text-zinc-450 hover:text-zinc-300'
-                }`}
+                id="close_tx_modal_btn"
+                onClick={() => setShowAddTxModal(false)}
+                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center active:scale-95 transition-all cursor-pointer"
               >
-                {language === 'TH' ? 'รายจ่าย' : 'Expense'}
+                <X className="w-5 h-5 text-zinc-400" />
               </button>
-              <button 
-                type="button"
-                onClick={() => { 
-                  setTxModalType('income'); 
-                  setTxModalCategoryId('cat-salary'); 
-                }}
-                className={`relative z-10 px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
-                  txModalType === 'income' ? 'bg-zinc-800 text-[#4edea3] shadow' : 'text-zinc-450 hover:text-zinc-300'
-                }`}
-              >
-                {language === 'TH' ? 'รายได้' : 'Income'}
-              </button>
-            </div>
 
-            <div className="w-10 h-10" /> {/* Spacer to align toggle in the exact center */}
-          </header>
-
-          <main className="flex-1 flex flex-col justify-between gap-5 my-4">
-            {/* Glowing Big Amount display (Now a fully functional native text input with keyboard support!) */}
-            <div className="flex flex-col items-center justify-center py-1.5 shrink-0 selection:bg-transparent">
-              <div className="flex items-center justify-center font-mono tracking-wider w-full max-w-[280px] bg-[#121212]/30 border border-zinc-900/60 rounded-2xl py-2 px-4 shadow-inner">
-                <span className="text-2xl font-extrabold text-[#4edea3]/60 mr-1.5 select-none">฿</span>
-                <input 
-                  id="tx_modal_amount_input"
-                  type="text"
-                  inputMode="decimal"
-                  value={txModalAmount === '0' ? '' : getModalAmountFormatted()}
-                  onChange={(e) => handleModalAmountChange(e.target.value)}
-                  placeholder="0"
-                  className="bg-transparent border-none text-4xl font-extrabold text-[#4edea3] tracking-tight text-center outline-none focus:ring-0 w-full placeholder-[#4edea3]/30 min-w-0"
-                  autoFocus
-                />
+              <div className="bg-zinc-900 p-[3px] rounded-full flex border border-zinc-850 shadow-inner">
+                <button 
+                  type="button"
+                  onClick={() => { setTxModalType('expense'); setTxModalCategoryId('cat-food'); }}
+                  className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
+                    txModalType === 'expense' ? 'bg-zinc-800 text-[#ff7875] shadow' : 'text-zinc-450 hover:text-zinc-300'
+                  }`}
+                >
+                  {language === 'TH' ? 'รายจ่าย' : 'Expense'}
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => { setTxModalType('income'); setTxModalCategoryId('cat-salary'); }}
+                  className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
+                    txModalType === 'income' ? 'bg-zinc-800 text-[#4edea3] shadow' : 'text-zinc-450 hover:text-zinc-300'
+                  }`}
+                >
+                  {language === 'TH' ? 'รายได้' : 'Income'}
+                </button>
               </div>
+
+              <div className="w-10 h-10" />
             </div>
-                         {/* Grid-based Categorization Selector */}
+
+            {/* Row 2: Amount — always visible */}
+            <div className="flex items-center justify-center font-mono tracking-wider bg-[#121212]/40 border border-zinc-900 rounded-2xl py-2.5 px-4 shadow-inner">
+              <span className={`text-2xl font-extrabold mr-1.5 select-none ${
+                txModalType === 'expense' ? 'text-[#ff7875]/60' : 'text-[#4edea3]/60'
+              }`}>฿</span>
+              <input 
+                id="tx_modal_amount_input"
+                type="text"
+                inputMode="decimal"
+                value={txModalAmount === '0' ? '' : getModalAmountFormatted()}
+                onChange={(e) => handleModalAmountChange(e.target.value)}
+                placeholder="0"
+                className={`bg-transparent border-none text-4xl font-extrabold tracking-tight text-center outline-none focus:ring-0 w-full min-w-0 ${
+                  txModalType === 'expense'
+                    ? 'text-[#ff7875] placeholder-[#ff7875]/30'
+                    : 'text-[#4edea3] placeholder-[#4edea3]/30'
+                }`}
+                autoFocus
+              />
+            </div>
+          </div>
+
+          {/* ── SCROLLABLE MIDDLE: category + note + goal ── */}
+          <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
+            {/* Category Grid */}
             {txModalType === 'income' ? (
-              /* Income custom horizontal wide options grid (2-columns) */
-              <div className="w-full shrink-0 px-1">
-                <span className="text-[12.5px] font-bold text-zinc-400 block mb-2.5 px-1 text-left">
+              <div className="w-full">
+                <span className="text-[12.5px] font-bold text-zinc-400 block mb-2.5 text-left">
                   {language === 'TH' ? 'แหล่งที่มาของรายรับ' : 'Income Source Category'}
                 </span>
                 <div className="grid grid-cols-2 gap-3">
@@ -379,9 +376,8 @@ export default function App() {
                 </div>
               </div>
             ) : (
-              /* Expense compact grid layout (4-columns) */
-              <div className="w-full shrink-0 px-1">
-                <span className="text-[12.5px] font-bold text-zinc-400 block mb-2.5 px-1 text-left">
+              <div className="w-full">
+                <span className="text-[12.5px] font-bold text-zinc-400 block mb-2.5 text-left">
                   {language === 'TH' ? 'ประเภทของรายจ่าย' : 'Expense Category'}
                 </span>
                 <div className="grid grid-cols-4 gap-2">
@@ -409,8 +405,8 @@ export default function App() {
               </div>
             )}
 
-            {/* Remarks / Note input field custom styled wrapper */}
-            <div className="shrink-0 flex flex-col gap-1 text-left">
+            {/* Note Input */}
+            <div className="flex flex-col gap-1 text-left">
               <span className="text-[12.5px] font-bold text-zinc-400 block mb-1.5 px-1">
                 {language === 'TH' ? 'บันทึกช่วยจำ (โน้ตย่อ)' : 'Note / Description'}
               </span>
@@ -427,9 +423,9 @@ export default function App() {
               </div>
             </div>
 
-            {/* Premium Smart Direct Goal Allocation Widget (Income exclusive) */}
+            {/* Goal Allocation (income only) */}
             {txModalType === 'income' && goals.length > 0 && (
-              <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-4 flex flex-col gap-3 shrink-0 text-left">
+              <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-4 flex flex-col gap-3 text-left">
                 <div className="flex justify-between items-center select-none">
                   <span className="text-[12.5px] font-bold text-zinc-350 flex items-center gap-1.5 select-none">
                     🎯 {language === 'TH' ? 'โอนออมเงินเข้าเป้าหมายโดยตรง?' : 'Allocate to Savings Goal?'}
@@ -449,7 +445,6 @@ export default function App() {
 
                 {isAllocating && (
                   <div className="flex flex-col gap-3 animate-in fade-in duration-200">
-                    {/* Goal Selector Dropdown */}
                     <div className="flex flex-col gap-1">
                       <span className="text-[11.5px] font-bold text-zinc-400 block mb-1.5 text-left">
                         {language === 'TH' ? 'เลือกกองเป้าหมายการออม' : 'Select Goal Pocket'}
@@ -467,7 +462,6 @@ export default function App() {
                       </select>
                     </div>
 
-                    {/* Quick Proportion selection buttons */}
                     <div className="flex gap-2">
                       <button
                         type="button"
@@ -496,54 +490,55 @@ export default function App() {
                 )}
               </div>
             )}
+          </div>
 
-            {/* Custom 3x4 layout numeric keypad containing large touch points */}
-            <div className="grid grid-cols-3 gap-2.5 shrink-0 select-none">
+          {/* ── FIXED BOTTOM: numpad + save ── */}
+          <div className="shrink-0 px-5 pt-3 pb-5 border-t border-zinc-900 bg-black flex flex-col gap-2.5">
+            {/* Numpad */}
+            <div className="grid grid-cols-3 gap-2 select-none">
               {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
                 <button
                   key={num}
                   onClick={() => handleNumpadPress(num)}
-                  className="h-14 font-mono font-bold text-center text-2xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-850 active:scale-95 active:border-zinc-800 border border-transparent transition-all cursor-pointer"
+                  className="h-12 font-mono font-bold text-center text-2xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 border border-transparent transition-all cursor-pointer"
                 >
                   {num}
                 </button>
               ))}
-              {/* Row 4: . , 0 , backspace */}
               <button
                 onClick={() => handleNumpadPress('.')}
-                className="h-14 font-mono font-bold text-center text-3xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-850 active:scale-95 transition-all cursor-pointer"
+                className="h-12 font-mono font-bold text-center text-3xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
               >
                 .
               </button>
               <button
                 onClick={() => handleNumpadPress('0')}
-                className="h-14 font-mono font-bold text-center text-2xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-850 active:scale-95 transition-all cursor-pointer"
+                className="h-12 font-mono font-bold text-center text-2xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
               >
                 0
               </button>
               <button
                 id="numpad_delete_btn"
                 onClick={handleNumpadDelete}
-                className="h-14 text-[#ff7875] flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-850 active:scale-95 transition-all cursor-pointer"
-                title="Backspace"
+                className="h-12 text-[#ff7875] flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
               >
-                {/* Visual backspace character representation */}
-                <span className="text-sm font-bold font-mono tracking-wider uppercase font-mono">⌫ Delete</span>
+                <span className="text-sm font-bold font-mono tracking-wider uppercase">⌫ Delete</span>
               </button>
             </div>
 
-            {/* Save Transaction primary trigger button */}
-            <div className="shrink-0 mt-2 pb-safe">
-              <button 
-                id="save_transaction_action"
-                onClick={handleSaveTransaction}
-                className="w-full bg-[#4edea3] hover:opacity-95 font-bold text-[#003824] py-4 rounded-xl flex justify-center items-center active:scale-[0.98] transition-all duration-150 shadow-[0_0_35px_rgba(78,222,163,0.18)] cursor-pointer text-md tracking-wide uppercase font-semibold"
-              >
-                {language === 'TH' ? 'บันทึกรายการธุรกรรม' : 'Save Transaction'}
-              </button>
-            </div>
-
-          </main>
+            {/* Save button */}
+            <button 
+              id="save_transaction_action"
+              onClick={handleSaveTransaction}
+              className={`w-full font-bold py-4 rounded-xl flex justify-center items-center active:scale-[0.98] transition-all duration-150 cursor-pointer text-md tracking-wide uppercase font-semibold ${
+                txModalType === 'expense'
+                  ? 'bg-[#ff7875] text-black shadow-[0_0_35px_rgba(255,120,117,0.2)]'
+                  : 'bg-[#4edea3] text-[#003824] shadow-[0_0_35px_rgba(78,222,163,0.18)]'
+              }`}
+            >
+              {language === 'TH' ? 'บันทึกรายการธุรกรรม' : 'Save Transaction'}
+            </button>
+          </div>
         </div>
       )}
 

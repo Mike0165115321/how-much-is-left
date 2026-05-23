@@ -245,9 +245,12 @@ export default function TransactionsPage() {
             {Object.keys(groupedTransactions).map((dateKey) => (
               <div key={dateKey} className="flex flex-col gap-2">
                 {/* Section Date Heading */}
-                <h3 className="text-xs font-bold uppercase tracking-widest text-[#4edea3] bg-zinc-950/80 sticky top-[152px] py-1 border-b border-zinc-900/30 font-mono">
-                  {formatDateLabel(dateKey)}
-                </h3>
+                <div className="flex items-center gap-3 mt-1">
+                  <span className="text-[11px] font-extrabold uppercase tracking-widest text-[#4edea3] font-mono shrink-0">
+                    {formatDateLabel(dateKey)}
+                  </span>
+                  <div className="flex-1 h-px bg-zinc-900" />
+                </div>
 
                 {/* Date Group Listing */}
                 <div className="flex flex-col gap-2">
