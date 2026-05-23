@@ -36,98 +36,264 @@ export default function ReportsPage() {
       .trim();
   };
 
-  // 1. Analyze Core Expenses split for the Donut Chart
-  const expenseStats = useMemo(() => {
+  // 1. Analyze Core Incomes & Expenses split for the Donut Chart
+  const financialStats = useMemo(() => {
     const expenses = transactions.filter((tx) => tx.type === 'expense');
+    const incomes = transactions.filter((tx) => tx.type === 'income');
+    
     const totalExp = expenses.reduce((sum, tx) => sum + tx.amount, 0);
+    const totalInc = incomes.reduce((sum, tx) => sum + tx.amount, 0);
+    const netFlow = totalInc - totalExp;
+    const combinedTotal = totalInc + totalExp;
 
-    // Group by categoryId
-    const grouped: { [id: string]: number } = {};
+    // Group expenses by category
+    const groupedExp: { [id: string]: number } = {};
     expenses.forEach((tx) => {
-      grouped[tx.categoryId] = (grouped[tx.categoryId] || 0) + tx.amount;
+      groupedExp[tx.categoryId] = (groupedExp[tx.categoryId] || 0) + tx.amount;
     });
 
-    // Map to list with category metadata
-    const list = Object.keys(grouped).map((catId) => {
+    // Group incomes by category
+    const groupedInc: { [id: string]: number } = {};
+    incomes.forEach((tx) => {
+      groupedInc[tx.categoryId] = (groupedInc[tx.categoryId] || 0) + tx.amount;
+    });
+
+    // Map categories with metadata
+    const expenseList = Object.keys(groupedExp).map((catId) => {
       const cat = categories.find((c) => c.id === catId);
-      const amount = grouped[catId];
+      const amount = groupedExp[catId];
       const percentage = totalExp > 0 ? Math.round((amount / totalExp) * 100) : 0;
       return {
         id: catId,
+        type: 'expense' as const,
         amount,
         percentage,
         nameEN: cat?.nameEN || 'Other',
         nameTH: cat?.nameTH || 'อื่นๆ',
-        emoji: cat?.emoji || '🍔',
-        color: cat?.color || '#a78bfa',
+        emoji: cat?.emoji || '💸',
+        color: '#ff7875',
       };
-    }).sort((a, b) => b.amount - a.amount);
+    });
+
+    const incomeList = Object.keys(groupedInc).map((catId) => {
+      const cat = categories.find((c) => c.id === catId);
+      const amount = groupedInc[catId];
+      const percentage = totalInc > 0 ? Math.round((amount / totalInc) * 100) : 0;
+      return {
+        id: catId,
+        type: 'income' as const,
+        amount,
+        percentage,
+        nameEN: cat?.nameEN || 'Other',
+        nameTH: cat?.nameTH || 'อื่นๆ',
+        emoji: cat?.emoji || '💵',
+        color: '#4edea3',
+      };
+    });
+
+    // Combined list sorted by amount descending
+    const breakdown = [...incomeList, ...expenseList].sort((a, b) => b.amount - a.amount);
 
     return {
-      total: totalExp,
-      breakdown: list,
+      totalExp,
+      totalInc,
+      netFlow,
+      combinedTotal,
+      breakdown,
     };
   }, [transactions, categories]);
 
-  // 2. Dual Bar Chart (Fixed structure matching screenshot mock trend, but updated dynamically with actual user parameters if any!)
-  // January - June mock trends with actual logs appended if match months!
-  const monthlyTrendsChartData = useMemo(() => {
-    // Default mock data that aligns perfectly with reports mock image
-    const bases = [
-      { month: 'Jan', income: 15000, expense: 12000, percentageInc: 40, percentageExp: 60 },
-      { month: 'Feb', income: 18000, expense: 9500, percentageInc: 70, percentageExp: 50 },
-      { month: 'Mar', income: 24000, expense: 18000, percentageInc: 90, percentageExp: 80 },
-      { month: 'Apr', income: 12000, expense: 14200, percentageInc: 45, percentageExp: 55 },
-      { month: 'May', income: 20000, expense: 11000, percentageInc: 65, percentageExp: 50 },
-      { month: 'Jun', income: 22000, expense: 24500, percentageInc: 80, percentageExp: 95 },
-    ];
+  // SVG dynamic donut segment stroke rendering helper
+  const donutSegments = useMemo(() => {
+    const { totalInc, totalExp, combinedTotal } = financialStats;
+    if (combinedTotal === 0) return [];
+    
+    const percentageInc = (totalInc / combinedTotal) * 100;
+    const percentageExp = (totalExp / combinedTotal) * 100;
 
-    // Read current transactions and override matching months
-    // Let's make the mock respond to actual logs!
-    const currentMonthNum = new Date().getMonth(); // 0 - 11
-    const monthsName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    
-    // Sum for current month
-    let userCurrentMonthIncome = 0;
-    let userCurrentMonthExpense = 0;
-    
-    const nowY = new Date().getFullYear();
-    const nowM = new Date().getMonth();
-    
-    transactions.forEach(tx => {
-      const txDate = new Date(tx.date);
-      if (txDate.getFullYear() === nowY && txDate.getMonth() === nowM) {
-        if (tx.type === 'income') {
-          userCurrentMonthIncome += tx.amount;
-        } else {
-          userCurrentMonthExpense += tx.amount;
-        }
-      }
-    });
+    const segments = [];
+    let offset = 0;
 
-    // We can map current month in bases matching mock index
-    const labelKey = monthsName[currentMonthNum] || 'Jun';
-    const index = bases.findIndex(b => b.month === labelKey);
-    if (index !== -1 && (userCurrentMonthIncome > 0 || userCurrentMonthExpense > 0)) {
-      bases[index].income = Math.max(bases[index].income, userCurrentMonthIncome);
-      bases[index].expense = Math.max(bases[index].expense, userCurrentMonthExpense);
-      
-      // cap percentage scale for rendering heights cleanly inside 112px
-      const maxVal = Math.max(...bases.map(b => Math.max(b.income, b.expense)));
-      bases.forEach(b => {
-        b.percentageInc = Math.max(10, Math.min(100, (b.income / maxVal) * 100));
-        b.percentageExp = Math.max(10, Math.min(100, (b.expense / maxVal) * 100));
+    if (percentageInc > 0) {
+      segments.push({
+        id: 'inc-segment',
+        color: '#4edea3',
+        percentage: percentageInc,
+        strokeDasharray: `${percentageInc} ${100 - percentageInc}`,
+        strokeDashoffset: 100 - offset,
       });
+      offset += percentageInc;
     }
 
-    return bases;
-  }, [transactions]);
+    if (percentageExp > 0) {
+      segments.push({
+        id: 'exp-segment',
+        color: '#ff7875',
+        percentage: percentageExp,
+        strokeDasharray: `${percentageExp} ${100 - percentageExp}`,
+        strokeDashoffset: 100 - offset,
+      });
+      offset += percentageExp;
+    }
 
-  // 3. Highest Expense Category This Month
-  const highestExpenseCard = useMemo(() => {
-    if (expenseStats.breakdown.length === 0) return null;
-    return expenseStats.breakdown[0]; // Already sorted descending
-  }, [expenseStats]);
+    return segments;
+  }, [financialStats]);
+
+  // 2. Dynamic Period Data Aggregation for Bar Chart
+  const trendsChartData = useMemo(() => {
+    const monthsNameEN = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const monthsNameTH = ['ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.', 'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'];
+    
+    const daysNameEN = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+    const daysNameTH = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+
+    if (activeTab === 'week') {
+      const data = [];
+      for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setDate(d.getDate() - i);
+        const dateStr = d.toISOString().split('T')[0];
+        
+        let income = 0;
+        let expense = 0;
+        transactions.forEach((tx) => {
+          if (tx.date === dateStr) {
+            if (tx.type === 'income') {
+              income += tx.amount;
+            } else {
+              expense += tx.amount;
+            }
+          }
+        });
+
+        const dayName = language === 'TH' ? daysNameTH[d.getDay()] : daysNameEN[d.getDay()];
+        const dayNum = d.getDate();
+        const label = `${dayName} ${dayNum}`;
+        
+        data.push({ label, income, expense });
+      }
+      return data;
+    }
+    
+    if (activeTab === 'month') {
+      const data = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date();
+        d.setMonth(d.getMonth() - i);
+        const year = d.getFullYear();
+        const month = d.getMonth();
+
+        let income = 0;
+        let expense = 0;
+        transactions.forEach((tx) => {
+          const parts = tx.date.split('-');
+          if (parts.length === 3) {
+            const txYear = parseInt(parts[0]);
+            const txMonth = parseInt(parts[1]) - 1;
+            if (txYear === year && txMonth === month) {
+              if (tx.type === 'income') {
+                income += tx.amount;
+              } else {
+                expense += tx.amount;
+              }
+            }
+          }
+        });
+
+        const label = language === 'TH' ? monthsNameTH[month] : monthsNameEN[month];
+        data.push({ label, income, expense });
+      }
+      return data;
+    }
+
+    if (activeTab === 'year') {
+      const data = [];
+      const currentYear = new Date().getFullYear();
+      for (let i = 4; i >= 0; i--) {
+        const year = currentYear - i;
+
+        let income = 0;
+        let expense = 0;
+        transactions.forEach((tx) => {
+          const parts = tx.date.split('-');
+          if (parts.length === 3) {
+            const txYear = parseInt(parts[0]);
+            if (txYear === year) {
+              if (tx.type === 'income') {
+                income += tx.amount;
+              } else {
+                expense += tx.amount;
+              }
+            }
+          }
+        });
+
+        const label = String(year);
+        data.push({ label, income, expense });
+      }
+      return data;
+    }
+
+    // activeTab === 'custom' -> Weeks of current month
+    const data = [];
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth();
+    
+    const weeks = [
+      { nameEN: 'W1', nameTH: 'ส.1', start: 1, end: 7 },
+      { nameEN: 'W2', nameTH: 'ส.2', start: 8, end: 14 },
+      { nameEN: 'W3', nameTH: 'ส.3', start: 15, end: 21 },
+      { nameEN: 'W4', nameTH: 'ส.4', start: 22, end: 31 },
+    ];
+
+    weeks.forEach((w) => {
+      let income = 0;
+      let expense = 0;
+      
+      transactions.forEach((tx) => {
+        const parts = tx.date.split('-');
+        if (parts.length === 3) {
+          const txYear = parseInt(parts[0]);
+          const txMonth = parseInt(parts[1]) - 1;
+          const txDay = parseInt(parts[2]);
+          
+          if (txYear === year && txMonth === month && txDay >= w.start && txDay <= w.end) {
+            if (tx.type === 'income') {
+              income += tx.amount;
+            } else {
+              expense += tx.amount;
+            }
+          }
+        }
+      });
+
+      const label = language === 'TH' ? w.nameTH : w.nameEN;
+      data.push({ label, income, expense });
+    });
+    
+    return data;
+  }, [transactions, activeTab, language]);
+
+  // Normalize column heights relative to the max transaction value
+  const computedChartData = useMemo(() => {
+    const maxVal = Math.max(...trendsChartData.map(d => Math.max(d.income, d.expense)));
+    return trendsChartData.map(d => {
+      const percentageInc = maxVal > 0 ? (d.income / maxVal) * 100 : 0;
+      const percentageExp = maxVal > 0 ? (d.expense / maxVal) * 100 : 0;
+      return {
+        ...d,
+        percentageInc: Math.max(d.income > 0 ? 8 : 0, percentageInc),
+        percentageExp: Math.max(d.expense > 0 ? 8 : 0, percentageExp),
+      };
+    });
+  }, [trendsChartData]);
+
+  // 3. Highest Financial Category This Month
+  const highestCategoryCard = useMemo(() => {
+    if (financialStats.breakdown.length === 0) return null;
+    return financialStats.breakdown[0]; // Already sorted descending
+  }, [financialStats]);
 
   // Simple slice of last 3 recent transactions
   const recentExpTransactions = useMemo(() => {
@@ -137,50 +303,50 @@ export default function ReportsPage() {
   }, [transactions]);
 
   return (
-    <div className="flex flex-col flex-1 pb-10" id="reports_screen">
+    <div className="flex flex-col flex-1 pb-6" id="reports_screen">
       {/* Top Header Filter Segment Tabs */}
-      <header className="px-6 pt-6 pb-4 sticky top-0 bg-black/90 backdrop-blur-md z-10 border-b border-zinc-900">
-        <h1 className="text-2xl font-bold text-zinc-100 tracking-tight mb-4">
+      <header className="px-4 py-3 sm:px-6 sm:pt-6 sm:pb-4 sticky top-0 bg-black/90 backdrop-blur-md z-10 border-b border-zinc-900">
+        <h1 className="text-xl sm:text-2xl font-bold text-zinc-100 tracking-tight mb-2.5 sm:mb-4">
           {language === 'TH' ? 'วิเคราะห์การเงิน' : 'Analytics'}
         </h1>
 
         <div className="bg-[#121212] p-[3px] rounded-full flex relative border border-zinc-800">
           <button 
             onClick={() => setActiveTab('week')}
-            className={`flex-1 py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
+            className={`flex-1 py-1 sm:py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
               activeTab === 'week' 
                 ? 'bg-zinc-800 text-[#4edea3] shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-300'
+                : 'text-zinc-550 hover:text-zinc-300'
             }`}
           >
             {language === 'TH' ? 'รายสัปดาห์' : 'Week'}
           </button>
           <button 
             onClick={() => setActiveTab('month')}
-            className={`flex-1 py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
+            className={`flex-1 py-1 sm:py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
               activeTab === 'month' 
                 ? 'bg-zinc-800 text-[#4edea3] shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-300'
+                : 'text-zinc-550 hover:text-zinc-300'
             }`}
           >
             {language === 'TH' ? 'รายเดือน' : 'Month'}
           </button>
           <button 
             onClick={() => setActiveTab('year')}
-            className={`flex-1 py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
+            className={`flex-1 py-1 sm:py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
               activeTab === 'year' 
                 ? 'bg-zinc-800 text-[#4edea3] shadow-sm' 
-                : 'text-zinc-400 hover:text-zinc-300'
+                : 'text-zinc-500 hover:text-zinc-300'
             }`}
           >
             {language === 'TH' ? 'รายปี' : 'Year'}
           </button>
           <button 
             onClick={() => setActiveTab('custom')}
-            className={`flex-1 py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
+            className={`flex-1 py-1 sm:py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
               activeTab === 'custom' 
                 ? 'bg-zinc-800 text-[#4edea3] shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-300'
+                : 'text-zinc-550 hover:text-zinc-300'
             }`}
           >
             {language === 'TH' ? 'กำหนดเอง' : 'Custom'}
@@ -189,11 +355,11 @@ export default function ReportsPage() {
       </header>
 
       {/* Main Stats Scrollable container */}
-      <main className="flex-grow px-6 py-4 max-w-2xl mx-auto w-full flex flex-col gap-8">
+      <main className="flex-grow px-4 py-3 sm:px-6 sm:py-4 max-w-2xl mx-auto w-full flex flex-col gap-5 sm:gap-8">
         
-        {/* SECTION 1: Category Expense Donut Chart representation */}
-        <section className="flex flex-col items-center justify-center py-4 bg-[#121212]/30 border border-zinc-900 rounded-2xl p-6">
-          <div className="relative w-64 h-64 flex items-center justify-center">
+        {/* SECTION 1: Combined Category Donut Chart representation */}
+        <section className="flex flex-col items-center justify-center py-3 sm:py-4 bg-[#121212]/30 border border-zinc-900 rounded-2xl p-4 sm:p-6 w-full">
+          <div className="relative w-48 h-48 sm:w-60 sm:h-60 flex items-center justify-center">
             {/* Elegant, dynamic SVG circle representation for maximum responsive sizing and design accuracy */}
             <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
               <circle
@@ -205,119 +371,167 @@ export default function ReportsPage() {
                 fill="transparent"
               />
               {/* Calculate and draw segment strokes dynamically */}
-              {expenseStats.breakdown.reduce((accum, item, idx) => {
-                const percentage = item.percentage;
-                if (percentage === 0) return accum;
-                
-                const strokeDasharray = `${percentage} ${100 - percentage}`;
-                const strokeDashoffset = 100 - accum.offset;
-                
-                accum.elements.push(
-                  <circle
-                    key={item.id}
-                    cx="50"
-                    cy="50"
-                    r="38"
-                    strokeWidth="10"
-                    stroke={item.color}
-                    strokeDasharray={strokeDasharray}
-                    strokeDashoffset={strokeDashoffset}
-                    strokeLinecap="butt"
-                    fill="transparent"
-                    className="transition-all duration-1000 ease-in-out"
-                  />
-                );
-                
-                accum.offset += percentage;
-                return accum;
-              }, { offset: 0, elements: [] as React.ReactNode[] }).elements}
+              {donutSegments.map((seg) => (
+                <circle
+                  key={seg.id}
+                  cx="50"
+                  cy="50"
+                  r="38"
+                  strokeWidth="10"
+                  stroke={seg.color}
+                  strokeDasharray={seg.strokeDasharray}
+                  strokeDashoffset={seg.strokeDashoffset}
+                  strokeLinecap="butt"
+                  fill="transparent"
+                  className="transition-all duration-1000 ease-in-out"
+                />
+              ))}
             </svg>
 
             {/* Core textual balance indicators */}
             <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-[11px] uppercase tracking-widest text-zinc-500 font-bold">
-                {language === 'TH' ? 'รายจ่ายรวม' : 'Total Exp.'}
+              <span className="text-[10px] sm:text-[10.5px] uppercase tracking-widest text-zinc-500 font-bold">
+                {language === 'TH' ? 'คงเหลือสุทธิ' : 'Net Flow'}
               </span>
-              <span className="text-[#4edea3] font-mono text-2xl font-bold tracking-tight mt-1">
-                {formatCurrency(expenseStats.total)}
+              <span className={`font-mono text-xl sm:text-2xl font-bold tracking-tight mt-0.5 sm:mt-1 ${
+                financialStats.netFlow >= 0 ? 'text-[#4edea3]' : 'text-[#ff7875]'
+              }`}>
+                {financialStats.netFlow >= 0 ? '+' : ''}{formatCurrency(financialStats.netFlow)}
               </span>
             </div>
           </div>
 
-          {/* Dynamic Legends */}
-          <div className="flex gap-x-4 gap-y-2 mt-6 w-full justify-center flex-wrap">
-            {expenseStats.breakdown.length === 0 ? (
-              <span className="text-xs text-zinc-500 font-medium">
-                {language === 'TH' ? 'ไม่มีประวัติใช้จ่ายเดือนนี้' : 'No expenses logged yet.'}
+          {/* Sleek 2-column card below the chart showing Total Income and Total Expense side-by-side */}
+          <div className="grid grid-cols-2 gap-3 w-full mt-4 border-t border-zinc-900 pt-4">
+            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-3 flex flex-col gap-1 items-center justify-center">
+              <div className="flex items-center gap-1.5 text-[#4edea3]">
+                <ArrowUpRight className="w-4 h-4" />
+                <span className="text-[10.5px] uppercase tracking-wider font-bold text-zinc-400">
+                  {language === 'TH' ? 'รายรับรวม' : 'Total Income'}
+                </span>
+              </div>
+              <span className="font-mono text-base sm:text-lg font-bold text-[#4edea3] mt-0.5">
+                {formatCurrency(financialStats.totalInc)}
               </span>
+            </div>
+            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-3 flex flex-col gap-1 items-center justify-center">
+              <div className="flex items-center gap-1.5 text-[#ff7875]">
+                <ArrowDownLeft className="w-4 h-4" />
+                <span className="text-[10.5px] uppercase tracking-wider font-bold text-zinc-400">
+                  {language === 'TH' ? 'รายจ่ายรวม' : 'Total Expense'}
+                </span>
+              </div>
+              <span className="font-mono text-base sm:text-lg font-bold text-[#ff7875] mt-0.5">
+                {formatCurrency(financialStats.totalExp)}
+              </span>
+            </div>
+          </div>
+
+          {/* Consolidated Category Breakdown List */}
+          <div className="w-full flex flex-col gap-2.5 mt-4">
+            <h3 className="text-sm font-bold tracking-wide text-zinc-300 mb-0.5 self-start">
+              {language === 'TH' ? 'สัดส่วนตามหมวดหมู่' : 'Category Breakdown'}
+            </h3>
+            {financialStats.breakdown.length === 0 ? (
+              <div className="bg-[#121212] border border-zinc-900 rounded-xl p-4 text-center text-xs text-zinc-550 w-full">
+                {language === 'TH' ? 'ยังไม่มีข้อมูลช่วงเวลานี้' : 'No transactions recorded for this period.'}
+              </div>
             ) : (
-              expenseStats.breakdown.map((item) => (
-                <div key={item.id} className="flex items-center gap-2">
-                  <span 
-                    className="w-2.5 h-2.5 rounded-full" 
-                    style={{ backgroundColor: item.color }} 
-                  />
-                  <span className="text-xs text-zinc-400 font-medium flex gap-1 items-center">
-                    <span>{item.emoji}</span>
-                    <span>{language === 'TH' ? item.nameTH : item.nameEN}</span>
-                    <strong className="text-zinc-200 font-mono">{item.percentage}%</strong>
-                  </span>
-                </div>
-              ))
+              <div className="flex flex-col gap-2 w-full">
+                {financialStats.breakdown.map((item) => (
+                  <div 
+                    key={`${item.type}-${item.id}`}
+                    className="bg-[#121212]/50 border border-zinc-900 rounded-xl p-2.5 flex items-center justify-between transition-all hover:border-zinc-800"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-lg bg-zinc-900 border border-zinc-850 flex items-center justify-center text-xl shadow-inner">
+                        {item.emoji}
+                      </div>
+                      <div className="flex flex-col gap-0.5">
+                        <span className="text-sm font-semibold text-zinc-200">
+                          {language === 'TH' ? item.nameTH : item.nameEN}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className={`text-[9.5px] font-extrabold px-1.5 py-0.5 rounded uppercase tracking-wider ${
+                            item.type === 'income' 
+                              ? 'bg-[#4edea3]/10 text-[#4edea3] border border-[#4edea3]/20' 
+                              : 'bg-[#ff7875]/10 text-[#ff7875] border border-[#ff7875]/20'
+                          }`}>
+                            {item.type === 'income' 
+                              ? (language === 'TH' ? 'รายรับ' : 'INCOME') 
+                              : (language === 'TH' ? 'รายจ่าย' : 'EXPENSE')}
+                          </span>
+                          <span className="text-[10px] text-zinc-500 font-bold font-mono">
+                            {item.percentage}%
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`font-mono text-sm font-bold ${
+                      item.type === 'income' ? 'text-[#4edea3]' : 'text-[#ff7875]'
+                    }`}>
+                      {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
         </section>
 
         {/* SECTION 2: Income vs Expense Grouped Bar Chart */}
-        <section className="bg-[#121212] border border-zinc-900 rounded-2xl p-5">
-          <div className="flex justify-between items-center mb-5">
+        <section className="bg-[#121212] border border-zinc-900 rounded-2xl p-4">
+          <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-bold tracking-wide text-zinc-200">
               {language === 'TH' ? 'เปรียบเทียบ รายได้ VS รายจ่าย' : 'Income vs Expense'}
             </h3>
             <span className="px-2.5 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800 text-[10px] font-mono font-bold">
-              6 Mos
+              {activeTab === 'week' && (language === 'TH' ? '7 วัน' : '7 Days')}
+              {activeTab === 'month' && (language === 'TH' ? '6 เดือน' : '6 Mos')}
+              {activeTab === 'year' && (language === 'TH' ? '5 ปี' : '5 Yrs')}
+              {activeTab === 'custom' && (language === 'TH' ? 'เดือนนี้' : 'This Month')}
             </span>
           </div>
 
           {/* Visual Responsive Grid Bar Elements */}
-          <div className="flex items-end justify-between h-32 pt-2 border-b border-zinc-900">
-            {monthlyTrendsChartData.map((data, index) => (
-              <div key={index} className="flex flex-col items-center gap-1.5 w-[14%]">
-                <div className="flex items-end gap-[3px] h-24 w-full justify-center pb-1">
+          <div className="flex items-end justify-around h-28 pt-1.5 border-b border-zinc-900">
+            {computedChartData.map((data, index) => (
+              <div key={index} className="flex flex-col items-center gap-1 flex-1 min-w-0">
+                <div className="flex items-end gap-[3px] h-20 w-full justify-center pb-1">
                   
-                  {/* Income column (gray background track) */}
+                  {/* Income column (Green accent) */}
                   <div 
                     title={`Income: ${formatCurrency(data.income)}`}
-                    className="w-1.5 bg-zinc-800 rounded-t-sm transition-all duration-700 hover:bg-zinc-700" 
+                    className="w-2 bg-[#4edea3] rounded-t-sm transition-all duration-700 hover:opacity-85" 
                     style={{ height: `${data.percentageInc}%` }}
                   />
 
-                  {/* Expense column (neon colors) */}
+                  {/* Expense column (Red/Rose accent) */}
                   <div 
                     title={`Expense: ${formatCurrency(data.expense)}`}
-                    className="w-1.5 bg-[#4edea3] rounded-t-sm transition-all duration-700 hover:opacity-80" 
+                    className="w-2 bg-[#ff7875] rounded-t-sm transition-all duration-700 hover:opacity-85" 
                     style={{ height: `${data.percentageExp}%` }}
                   />
 
                 </div>
                 {/* Labels */}
-                <span className="text-[10px] font-bold text-zinc-500 font-mono uppercase tracking-wide">
-                  {data.month}
+                <span className="text-[10px] font-bold text-zinc-500 font-mono uppercase tracking-wide truncate max-w-full text-center">
+                  {data.label}
                 </span>
               </div>
             ))}
           </div>
 
           {/* Color Indicator Legends footer */}
-          <div className="flex justify-center gap-6 mt-4">
+          <div className="flex justify-center gap-6 mt-3">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-zinc-800" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#4edea3]" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
-                {language === 'TH' ? 'รายได้' : 'Income'}
+                {language === 'TH' ? 'รายรับ' : 'Income'}
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-[#4edea3]" />
+              <span className="w-2.5 h-2.5 rounded-full bg-[#ff7875]" />
               <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
                 {language === 'TH' ? 'รายจ่าย' : 'Expense'}
               </span>
@@ -326,46 +540,54 @@ export default function ReportsPage() {
         </section>
 
         {/* SECTION 3: Stats Analytics Cards & Highlights */}
-        <section className="flex flex-col gap-3">
-          {highestExpenseCard ? (
-            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-5 flex items-center justify-between">
+        <section className="flex flex-col gap-2.5">
+          {highestCategoryCard ? (
+            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-4 flex items-center justify-between">
               <div className="flex flex-col gap-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">
-                  {language === 'TH' ? 'หมวดหมู่ที่ใช้เงินมากที่สุดเดือนนี้' : 'Highest Expense Category'}
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-550">
+                  {highestCategoryCard.type === 'income'
+                    ? (language === 'TH' ? 'หมวดหมู่แหล่งรายรับหลักของช่วงนี้' : 'Highest Income Source Category')
+                    : (language === 'TH' ? 'หมวดหมู่ที่ใช้เงินมากที่สุดของช่วงนี้' : 'Highest Expense Category')}
                 </span>
                 <div className="flex items-center gap-2.5 mt-2">
-                  <span className="text-2xl">{highestExpenseCard.emoji}</span>
+                  <span className="text-2xl">{highestCategoryCard.emoji}</span>
                   <span className="font-semibold text-zinc-200">
-                    {language === 'TH' ? highestExpenseCard.nameTH : highestExpenseCard.nameEN}
+                    {language === 'TH' ? highestCategoryCard.nameTH : highestCategoryCard.nameEN}
                   </span>
                 </div>
               </div>
               <div className="text-right flex flex-col items-end">
-                <span className="font-mono text-zinc-100 font-bold text-lg">
-                  {formatCurrency(highestExpenseCard.amount)}
+                <span className={`font-mono font-bold text-base sm:text-lg ${
+                  highestCategoryCard.type === 'income' ? 'text-[#4edea3]' : 'text-[#ff7875]'
+                }`}>
+                  {highestCategoryCard.type === 'income' ? '+' : '-'}{formatCurrency(highestCategoryCard.amount)}
                 </span>
-                <span className="text-[11px] font-bold text-[#4edea3] mt-2 px-2 py-0.5 bg-emerald-950/30 border border-emerald-900/40 rounded-sm font-mono">
-                  -5% vs last mo
+                <span className={`text-[11px] font-bold mt-2 px-2 py-0.5 border rounded-sm font-mono ${
+                  highestCategoryCard.type === 'income'
+                    ? 'text-[#4edea3] bg-emerald-950/20 border-emerald-900/30'
+                    : 'text-[#ff7875] bg-rose-950/20 border-rose-900/30'
+                }`}>
+                  {highestCategoryCard.type === 'income' ? '+8%' : '-5%'} {language === 'TH' ? 'เทียบเดือนก่อน' : 'vs last mo'}
                 </span>
               </div>
             </div>
           ) : (
-            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-5 text-center text-sm text-zinc-400">
-              {language === 'TH' ? 'ยังไม่มีข้อมูลวิเคราะห์คาสูงสุดของเดือนนี้' : 'No calculations yet for highest expense category.'}
+            <div className="bg-[#121212] border border-zinc-900 rounded-xl p-4 text-center text-sm text-zinc-400">
+              {language === 'TH' ? 'ยังไม่มีข้อมูลวิเคราะห์หลักในช่วงนี้' : 'No calculations yet for highest category.'}
             </div>
           )}
 
           {/* Quick Recent Transactions heading */}
-          <div className="flex justify-between items-center mt-4 mb-1">
+          <div className="flex justify-between items-center mt-2.5 mb-0.5">
             <h3 className="text-sm font-bold tracking-wide text-zinc-400">
               {language === 'TH' ? 'ประวัติรายจ่ายล่าสุด' : 'Recent Expenses'}
             </h3>
           </div>
 
           {/* Transactions List */}
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-1.5">
             {recentExpTransactions.length === 0 ? (
-              <div className="bg-[#121212] border border-zinc-900 rounded-xl p-4 text-center text-xs text-zinc-600">
+              <div className="bg-[#121212] border border-zinc-900 rounded-xl p-3 text-center text-xs text-zinc-600">
                 {language === 'TH' ? 'ไม่มีประวัติใช้จ่ายใดๆ' : 'No expenses recorded.'}
               </div>
             ) : (
@@ -374,7 +596,7 @@ export default function ReportsPage() {
                 return (
                   <div 
                     key={tx.id}
-                    className="bg-[#121212]/90 border border-zinc-900 hover:border-zinc-850 p-4 rounded-xl flex items-center justify-between"
+                    className="bg-[#121212]/90 border border-zinc-900 hover:border-zinc-850 p-3 rounded-xl flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3.5">
                       <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center text-xl border border-zinc-850">

@@ -91,9 +91,15 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-transport', nameEN: 'Transport', nameTH: 'เดินทาง', emoji: '🚗', icon: 'Car', color: '#ffb95f' },
   { id: 'cat-utilities', nameEN: 'Utilities', nameTH: 'ค่าน้ำค่าไฟ', emoji: '⚡', icon: 'Zap', color: '#fc7c78' },
   { id: 'cat-entertainment', nameEN: 'Entertainment', nameTH: 'ความบันเทิง', emoji: '🎬', icon: 'Film', color: '#a78bfa' },
+  { id: 'cat-ai', nameEN: 'AI Tools', nameTH: 'ค่า AI', emoji: '🤖', icon: 'Cpu', color: '#38bdf8' },
+  { id: 'cat-self-dev', nameEN: 'Self-Development', nameTH: 'พัฒนาตัวเอง', emoji: '🌱', icon: 'Sprout', color: '#a3e635' },
+  { id: 'cat-books', nameEN: 'Books', nameTH: 'หนังสือ', emoji: '📚', icon: 'BookOpen', color: '#fbbf24' },
   { id: 'cat-salary', nameEN: 'Salary', nameTH: 'เงินเดือน', emoji: '💰', icon: 'Wallet', color: '#34d399' },
   { id: 'cat-bonus', nameEN: 'Bonus', nameTH: 'เงินพิเศษ', emoji: '🎁', icon: 'Gift', color: '#fb7185' },
   { id: 'cat-investment', nameEN: 'Investment', nameTH: 'ลงทุน', emoji: '📈', icon: 'TrendingUp', color: '#60a5fa' },
+  { id: 'cat-business', nameEN: 'Business', nameTH: 'ธุรกิจ/ขายของ', emoji: '🏪', icon: 'Store', color: '#fbbf24' },
+  { id: 'cat-other-income', nameEN: 'Other Income', nameTH: 'รายได้อื่น ๆ', emoji: '💵', icon: 'Banknote', color: '#f472b6' },
+  { id: 'cat-project', nameEN: 'Project', nameTH: 'รายได้จากโปรเจกต์', emoji: '💼', icon: 'Briefcase', color: '#a78bfa' },
 ];
 
 const DEFAULT_TRANSACTIONS: Transaction[] = [
@@ -416,7 +422,7 @@ export const useFinanceStore = create<FinanceState>()(
       },
     }),
     {
-      name: 'how-much-is-left-storage',
+      name: 'how-much-is-left-storage-v3',
     }
   )
 );

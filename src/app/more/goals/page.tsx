@@ -47,6 +47,30 @@ export default function GoalsPage() {
       .trim();
   };
 
+  // Format deadline date helper
+  const formatDeadline = (deadlineStr: string) => {
+    if (!deadlineStr) return '';
+    if (deadlineStr === 'Recurring' || deadlineStr === 'วนซ้ำ') {
+      return language === 'TH' ? 'วนซ้ำรายเดือน' : 'Monthly Recurring';
+    }
+    const parts = deadlineStr.split('-');
+    if (parts.length === 3) {
+      const date = new Date(deadlineStr);
+      if (!isNaN(date.getTime())) {
+        return new Intl.DateTimeFormat(language === 'TH' ? 'th-TH' : 'en-US', { day: 'numeric', month: 'short', year: 'numeric' })
+          .format(date);
+      }
+    }
+    return deadlineStr;
+  };
+
+  // Quick deadline setter helper for mobile ease of use
+  const setQuickDeadline = (monthsToAdd: number) => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + monthsToAdd);
+    setNewDeadline(d.toISOString().split('T')[0]);
+  };
+
   // Filter list by selected Tab
   const filteredGoals = useMemo(() => {
     return goals.filter(g => g.type === activeTab);
@@ -54,7 +78,7 @@ export default function GoalsPage() {
 
   // Handle saving contribution action
   const handleContributeSubmit = () => {
-    const amt = parseFloat(contributionAmt);
+    const amt = parseFloat(contributionAmt.replace(/,/g, ''));
     if (isNaN(amt) || amt <= 0 || !showContributeModal) return;
 
     if (amt > netBalance) {
@@ -72,8 +96,8 @@ export default function GoalsPage() {
 
   // Handle saving full goal specification
   const handleSaveGoal = () => {
-    const targetVal = parseFloat(newTargetAmount);
-    const currentVal = parseFloat(newCurrentAmount) || 0;
+    const targetVal = parseFloat(newTargetAmount.replace(/,/g, ''));
+    const currentVal = parseFloat(newCurrentAmount.replace(/,/g, '')) || 0;
     
     if (!newTitle || isNaN(targetVal) || targetVal <= 0) return;
 
@@ -93,6 +117,28 @@ export default function GoalsPage() {
     setNewCurrentAmount('');
     setNewDeadline('');
     setShowAddGoalModal(false);
+  };
+
+  // Real-time Auto-Comma input formatter helper
+  const handleAmountChange = (val: string, setter: (formatted: string) => void) => {
+    const cleanVal = val.replace(/[^0-9.]/g, '');
+    const parts = cleanVal.split('.');
+    if (parts.length > 2) return;
+
+    const integerPart = parts[0];
+    const formattedInteger = integerPart ? parseInt(integerPart, 10).toLocaleString('en-US') : '';
+    
+    let finalVal = formattedInteger;
+    if (integerPart === '0') finalVal = '0';
+    else if (integerPart.startsWith('0') && integerPart.length > 1) {
+      finalVal = parseInt(integerPart, 10).toLocaleString('en-US');
+    }
+    
+    if (parts.length === 2) {
+      finalVal = `${finalVal}.${parts[1].slice(0, 2)}`;
+    }
+    
+    setter(finalVal);
   };
 
   // Get matching icon block
@@ -208,7 +254,9 @@ export default function GoalsPage() {
                     <div>
                       <h3 className="font-semibold text-zinc-100 text-sm">{g.title}</h3>
                       <p className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 mt-0.5">
-                        {language === 'TH' ? (g.type === 'periodic' ? 'วนซ้ำรายเดือน' : `ปลาหมาย: ${g.deadline}`) : (g.type === 'periodic' ? 'Monthly Recurring' : `Due: ${g.deadline}`)}
+                        {language === 'TH' 
+                          ? (g.type === 'periodic' ? 'วนซ้ำรายเดือน' : `เป้าหมาย: ${formatDeadline(g.deadline)}`) 
+                          : (g.type === 'periodic' ? 'Monthly Recurring' : `Due: ${formatDeadline(g.deadline)}`)}
                       </p>
                     </div>
                   </div>
@@ -284,7 +332,7 @@ export default function GoalsPage() {
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="Dream Car / Emergency Funds"
-                  className="bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3]"
+                  className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3]"
                 />
               </div>
 
@@ -318,47 +366,75 @@ export default function GoalsPage() {
               </div>
 
               <div className="flex gap-3">
-                <div className="flex-1 flex flex-col gap-1 justify-between">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest font-mono">
+                <div className="flex-1 flex flex-col gap-1 justify-between min-w-0">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest font-mono truncate" title={language === 'TH' ? 'เป้าหมาย (฿)' : 'Limit Budget'}>
                     {language === 'TH' ? 'เป้าหมาย (฿)' : 'Limit Budget'}
                   </label>
                   <input 
                     id="new_goal_target_amount"
-                    type="number" 
+                    type="text" 
+                    inputMode="decimal"
                     value={newTargetAmount}
-                    onChange={(e) => setNewTargetAmount(e.target.value)}
-                    placeholder="10000"
-                    className="bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3] font-mono"
+                    onChange={(e) => handleAmountChange(e.target.value, setNewTargetAmount)}
+                    placeholder="10,000"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3] font-mono"
                   />
                 </div>
-                <div className="flex-1 flex flex-col gap-1 justify-between">
-                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest font-mono">
+                <div className="flex-1 flex flex-col gap-1 justify-between min-w-0">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest font-mono truncate" title={language === 'TH' ? 'ออมเริ่มแรก (฿)' : 'Starting (฿)'}>
                     {language === 'TH' ? 'ออมเริ่มแรก (฿)' : 'Starting (฿)'}
                   </label>
                   <input 
                     id="new_goal_current_amount"
-                    type="number" 
+                    type="text" 
+                    inputMode="decimal"
                     value={newCurrentAmount}
-                    onChange={(e) => setNewCurrentAmount(e.target.value)}
-                    placeholder="2000"
-                    className="bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3] font-mono"
+                    onChange={(e) => handleAmountChange(e.target.value, setNewCurrentAmount)}
+                    placeholder="2,000"
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3] font-mono"
                   />
                 </div>
               </div>
 
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest font-mono">
-                  {language === 'TH' ? 'ระยะเวลาเป้าหมาย (เช่น ธ.ค. 2026 หรือ วนซ้ำ)' : 'Deadline Interval'}
-                </label>
-                <input 
-                  id="new_goal_deadline"
-                  type="text" 
-                  value={newDeadline}
-                  onChange={(e) => setNewDeadline(e.target.value)}
-                  placeholder={newType === 'periodic' ? 'Recurring' : 'Dec 2026'}
-                  className="bg-zinc-950 border border-zinc-800 rounded-lg py-2 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3]"
-                />
-              </div>
+              {newType === 'target' && (
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-bold text-zinc-500 uppercase tracking-widest font-mono">
+                    {language === 'TH' ? 'วันกำหนดส่งเป้าหมาย' : 'Target Deadline Date'}
+                  </label>
+                  <input 
+                    id="new_goal_deadline"
+                    type="date" 
+                    value={newDeadline}
+                    onChange={(e) => setNewDeadline(e.target.value)}
+                    className="w-full bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-sm text-zinc-200 outline-none focus:border-[#4edea3] font-mono block text-left"
+                    style={{ colorScheme: 'dark' }}
+                  />
+                  {/* Mobile Quick Tap Shortcuts */}
+                  <div className="flex gap-2 mt-1.5 justify-start flex-wrap">
+                    <button 
+                      onClick={() => setQuickDeadline(3)}
+                      className="px-2.5 py-1 text-[10px] font-extrabold bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 hover:border-[#4edea3]/40 rounded-full text-zinc-450 hover:text-[#4edea3] active:scale-95 transition-all cursor-pointer font-mono"
+                      type="button"
+                    >
+                      {language === 'TH' ? '+3 เดือน' : '+3 Mos'}
+                    </button>
+                    <button 
+                      onClick={() => setQuickDeadline(6)}
+                      className="px-2.5 py-1 text-[10px] font-extrabold bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 hover:border-[#4edea3]/40 rounded-full text-zinc-450 hover:text-[#4edea3] active:scale-95 transition-all cursor-pointer font-mono"
+                      type="button"
+                    >
+                      {language === 'TH' ? '+6 เดือน' : '+6 Mos'}
+                    </button>
+                    <button 
+                      onClick={() => setQuickDeadline(12)}
+                      className="px-2.5 py-1 text-[10px] font-extrabold bg-zinc-950 hover:bg-zinc-900 border border-zinc-850 hover:border-[#4edea3]/40 rounded-full text-zinc-450 hover:text-[#4edea3] active:scale-95 transition-all cursor-pointer font-mono"
+                      type="button"
+                    >
+                      {language === 'TH' ? '+1 ปี' : '+1 Yr'}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               <button 
                 id="save_new_goal_btn"
@@ -394,12 +470,13 @@ export default function GoalsPage() {
             <div className="flex flex-col gap-4">
               <input 
                 id="contribution_amount_input"
-                type="number" 
+                type="text" 
+                inputMode="decimal"
                 value={contributionAmt}
-                onChange={(e) => setContributionAmt(e.target.value)}
-                placeholder="2000"
+                onChange={(e) => handleAmountChange(e.target.value, setContributionAmt)}
+                placeholder="2,000"
                 autoFocus
-                className="bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-center text-lg font-bold text-[#4edea3] outline-none focus:border-[#4edea3] font-mono"
+                className="bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-center text-lg font-bold text-[#4edea3] outline-none focus:border-[#4edea3] font-mono w-full"
               />
 
               <button 

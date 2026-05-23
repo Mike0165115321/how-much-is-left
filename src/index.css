@@ -1,16 +1,16 @@
-@import url('https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;800&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Geist", "IBM Plex Sans Thai", system-ui, -apple-system, sans-serif;
-  --font-body: "Geist", "IBM Plex Sans Thai", system-ui, -apple-system, sans-serif;
-  --font-mono: "Geist Mono", SFMono-Regular, monospace;
+  --font-sans: "Inter", "Noto Sans Thai", "Leelawadee UI", "Segoe UI", Tahoma, system-ui, -apple-system, sans-serif;
+  --font-body: "Inter", "Noto Sans Thai", "Leelawadee UI", "Segoe UI", Tahoma, system-ui, -apple-system, sans-serif;
+  --font-mono: "Geist Mono", "Noto Sans Thai", "Leelawadee UI", "Segoe UI", monospace;
 }
 
 body {
   background-color: #000000 !important;
   color: #e2e2e2;
-  font-family: var(--font-sans);
+  font-family: "Inter", "Noto Sans Thai", "Leelawadee UI", "Segoe UI", Tahoma, system-ui, -apple-system, sans-serif;
   margin: 0;
   padding: 0;
 }
