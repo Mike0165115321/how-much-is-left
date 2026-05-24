@@ -40,9 +40,6 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
     .filter(tx => tx.type === 'income' && tx.date === todayStr)
     .reduce((sum, tx) => sum + tx.amount, 0);
 
-  const hasActivityToday = todayIncome > 0 || todayExpense > 0;
-  const latestTx = transactions[0];
-
   // Helper to determine if a transaction is a savings transaction
   const isSavingsTx = React.useCallback((tx: any) => {
     if (!tx) return false;
@@ -53,6 +50,19 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
        tx.note.toLowerCase().includes('goal:') || 
        tx.note.toLowerCase().includes('ออม'));
   }, []);
+
+  const todayExpenseOnly = transactions
+    .filter(tx => tx.type === 'expense' && tx.date === todayStr && !isSavingsTx(tx))
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const todaySavingsOnly = transactions
+    .filter(tx => tx.type === 'expense' && tx.date === todayStr && isSavingsTx(tx))
+    .reduce((sum, tx) => sum + tx.amount, 0);
+
+  const todayNet = todayIncome - todayExpenseOnly - todaySavingsOnly;
+
+  const hasActivityToday = todayIncome > 0 || todayExpense > 0;
+  const latestTx = transactions[0];
 
   // Calculate overall cash flow volume metrics
   const totalIncome = transactions
@@ -245,9 +255,9 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
             <button 
               id="menu_today_summary_btn"
               onClick={() => onNavigate('transactions')}
-              className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-emerald-900/30 hover:shadow-[0_8px_30px_rgba(78,222,163,0.06)] transition-all active:scale-[0.95] text-left w-full cursor-pointer"
+              className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between min-h-[130px] sm:min-h-[150px] h-auto aspect-auto hover:bg-zinc-900/90 hover:border-emerald-900/30 hover:shadow-[0_8px_30px_rgba(78,222,163,0.06)] transition-all active:scale-[0.95] text-left w-full cursor-pointer py-4"
             >
-              <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight leading-tight mb-1">
+              <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight leading-tight mb-2">
                 {language === 'TH' ? 'สรุปวันนี้' : 'Today\'s Total'}
               </span>
               <div className="w-full flex flex-col gap-1 sm:gap-1.5 mt-auto">
@@ -257,7 +267,23 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
                 </div>
                 <div className="flex justify-between items-center w-full">
                   <span className="text-[11px] font-semibold text-zinc-400">{language === 'TH' ? 'รายจ่าย' : 'Spent'}</span>
-                  <span className="text-xs sm:text-sm font-bold font-mono text-[#ff7875]">-{formatCurrency(todayExpense)}</span>
+                  <span className="text-xs sm:text-sm font-bold font-mono text-[#ff7875]">-{formatCurrency(todayExpenseOnly)}</span>
+                </div>
+                <div className="flex justify-between items-center w-full">
+                  <span className="text-[11px] font-semibold text-zinc-400">{language === 'TH' ? 'เงินออม' : 'Savings'}</span>
+                  <span className="text-xs sm:text-sm font-bold font-mono text-sky-400">-{formatCurrency(todaySavingsOnly)}</span>
+                </div>
+                <div className="flex justify-between items-center w-full pt-1.5 border-t border-zinc-900/80 mt-0.5">
+                  <span className="text-[11px] font-bold text-zinc-300">{language === 'TH' ? 'คงเหลือวันนี้' : 'Remaining Today'}</span>
+                  <span className={`text-xs sm:text-sm font-black font-mono ${
+                    todayNet > 0 
+                      ? 'text-[#4edea3]' 
+                      : todayNet < 0 
+                        ? 'text-[#ff7875]' 
+                        : 'text-zinc-300'
+                  }`}>
+                    {todayNet > 0 ? '+' : ''}{formatCurrency(todayNet)}
+                  </span>
                 </div>
               </div>
             </button>
