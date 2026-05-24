@@ -29,7 +29,9 @@ export default function App() {
     addTransaction,
     resetToDefault,
     goals,
-    contributeToGoal
+    contributeToGoal,
+    enableAmbient,
+    setEnableAmbient
   } = useFinanceStore();
 
   // Navigation Routing States
@@ -266,10 +268,36 @@ export default function App() {
                 setForceSplash(true);
                 setCurrentScreen('dashboard');
               }}
-              className="mt-2 w-full py-3 bg-[#4edea3]/10 border border-[#4edea3]/25 hover:border-[#4edea3]/45 text-[#4edea3] hover:bg-[#4edea3]/15 font-bold rounded-xl text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
+              className="mt-1 w-full py-3 bg-[#4edea3]/10 border border-[#4edea3]/25 hover:border-[#4edea3]/45 text-[#4edea3] hover:bg-[#4edea3]/15 font-bold rounded-xl text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
             >
               🎬 {language === 'TH' ? 'เล่นอนิเมชั่นต้อนรับอีกครั้ง' : 'Replay Intro Welcome'}
             </button>
+
+            {/* Ambient Toggle Switch */}
+            <div className="flex items-center justify-between border-t border-zinc-900/60 pt-4 mt-2 select-none" id="ambient_effects_toggle_row">
+              <div className="flex flex-col gap-0.5 text-left">
+                <span className="text-xs font-bold text-zinc-300">
+                  {language === 'TH' ? '🌌 แสงไฟพื้นหลังเคลื่อนไหว' : '🌌 Ambient Backdrop Motion'}
+                </span>
+                <span className="text-[10.5px] text-zinc-550 leading-tight max-w-[280px]">
+                  {language === 'TH' ? 'เปิดเอฟเฟกต์สีฟุ้งเคลื่อนไหวด้านหลัง (ปิดเพื่อประหยัดแบตเตอรี่และสลับหน้าเร็วขึ้น)' : 'Show fluid glowing animations behind pages (disable for battery savings & maximum speed)'}
+                </span>
+              </div>
+              <button
+                type="button"
+                id="ambient_toggle_switch_btn"
+                onClick={() => setEnableAmbient(!enableAmbient)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out outline-none ${
+                  enableAmbient ? 'bg-[#4edea3]' : 'bg-zinc-800'
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-black shadow ring-0 transition duration-200 ease-in-out ${
+                    enableAmbient ? 'translate-x-5 bg-zinc-950' : 'translate-x-0 bg-zinc-400'
+                  }`}
+                />
+              </button>
+            </div>
           </div>
 
         </main>
@@ -318,11 +346,13 @@ export default function App() {
       <IOSInstallPrompt />
       
       {/* 🌌 living ambient floating backdrops */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-        <div className="absolute top-[15%] left-[-25%] w-[320px] h-[320px] rounded-full bg-emerald-500/6 blur-[85px] ambient-blob-1" />
-        <div className="absolute bottom-[20%] right-[-25%] w-[380px] h-[380px] rounded-full bg-purple-500/4 blur-[95px] ambient-blob-2" />
-        <div className="absolute top-[55%] right-[-15%] w-[260px] h-[260px] rounded-full bg-blue-500/4 blur-[80px] ambient-blob-1" style={{ animationDelay: '-6s' }} />
-      </div>
+      {enableAmbient && (
+        <div className="absolute inset-0 overflow-hidden pointer-events-none z-0" id="ambient_background_blobs">
+          <div className="absolute top-[15%] left-[-25%] w-[320px] h-[320px] rounded-full bg-emerald-500/6 blur-[85px] ambient-blob-1" />
+          <div className="absolute bottom-[20%] right-[-25%] w-[380px] h-[380px] rounded-full bg-purple-500/4 blur-[95px] ambient-blob-2" />
+          <div className="absolute top-[55%] right-[-15%] w-[260px] h-[260px] rounded-full bg-blue-500/4 blur-[80px] ambient-blob-1" style={{ animationDelay: '-6s' }} />
+        </div>
+      )}
       
       {/* Screen view target mounts */}
       <div className="flex-1 flex flex-col pb-26 overflow-x-hidden z-10 relative pt-safe">

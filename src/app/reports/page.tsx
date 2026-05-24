@@ -34,17 +34,26 @@ export default function ReportsPage() {
       .format(val)
       .replace('THB', '฿')
       .trim();
-  };
+  };  // Helper to determine if a transaction is a savings transaction
+  const isSavingsTx = React.useCallback((tx: any) => {
+    return tx.type === 'expense' && 
+      (tx.categoryId === 'cat-investment' || 
+       tx.categoryId.includes('saving') || 
+       tx.note.toLowerCase().includes('goal:') || 
+       tx.note.toLowerCase().includes('ออม'));
+  }, []);
 
-  // 1. Analyze Core Incomes & Expenses split for the Donut Chart
+  // 1. Analyze Core Incomes, Expenses & Savings split for the Donut Chart
   const financialStats = useMemo(() => {
-    const expenses = transactions.filter((tx) => tx.type === 'expense');
+    const savings = transactions.filter((tx) => isSavingsTx(tx));
+    const expenses = transactions.filter((tx) => tx.type === 'expense' && !isSavingsTx(tx));
     const incomes = transactions.filter((tx) => tx.type === 'income');
     
     const totalExp = expenses.reduce((sum, tx) => sum + tx.amount, 0);
     const totalInc = incomes.reduce((sum, tx) => sum + tx.amount, 0);
-    const netFlow = totalInc - totalExp;
-    const combinedTotal = totalInc + totalExp;
+    const totalSavings = savings.reduce((sum, tx) => sum + tx.amount, 0);
+    const netFlow = totalInc - totalExp - totalSavings;
+    const combinedTotal = totalInc + totalExp + totalSavings;
 
     // Group expenses by category
     const groupedExp: { [id: string]: number } = {};
@@ -56,6 +65,12 @@ export default function ReportsPage() {
     const groupedInc: { [id: string]: number } = {};
     incomes.forEach((tx) => {
       groupedInc[tx.categoryId] = (groupedInc[tx.categoryId] || 0) + tx.amount;
+    });
+
+    // Group savings by category
+    const groupedSav: { [id: string]: number } = {};
+    savings.forEach((tx) => {
+      groupedSav[tx.categoryId] = (groupedSav[tx.categoryId] || 0) + tx.amount;
     });
 
     // Map categories with metadata
@@ -91,25 +106,43 @@ export default function ReportsPage() {
       };
     });
 
+    const savingsList = Object.keys(groupedSav).map((catId) => {
+      const cat = categories.find((c) => c.id === catId);
+      const amount = groupedSav[catId];
+      const percentage = totalSavings > 0 ? Math.round((amount / totalSavings) * 100) : 0;
+      return {
+        id: catId,
+        type: 'savings' as const,
+        amount,
+        percentage,
+        nameEN: cat?.nameEN || 'Savings',
+        nameTH: cat?.nameTH || 'เงินออม',
+        emoji: cat?.emoji || '📈',
+        color: '#38bdf8',
+      };
+    });
+
     // Combined list sorted by amount descending
-    const breakdown = [...incomeList, ...expenseList].sort((a, b) => b.amount - a.amount);
+    const breakdown = [...incomeList, ...expenseList, ...savingsList].sort((a, b) => b.amount - a.amount);
 
     return {
       totalExp,
       totalInc,
+      totalSavings,
       netFlow,
       combinedTotal,
       breakdown,
     };
-  }, [transactions, categories]);
+  }, [transactions, categories, isSavingsTx]);
 
   // SVG dynamic donut segment stroke rendering helper
   const donutSegments = useMemo(() => {
-    const { totalInc, totalExp, combinedTotal } = financialStats;
+    const { totalInc, totalExp, totalSavings, combinedTotal } = financialStats;
     if (combinedTotal === 0) return [];
     
     const percentageInc = (totalInc / combinedTotal) * 100;
     const percentageExp = (totalExp / combinedTotal) * 100;
+    const percentageSavings = (totalSavings / combinedTotal) * 100;
 
     const segments = [];
     const circumference = 2 * Math.PI * 38; // ~238.761
@@ -139,6 +172,18 @@ export default function ReportsPage() {
       offset += percentageExp;
     }
 
+    if (percentageSavings > 0) {
+      const strokeLength = (percentageSavings / 100) * circumference;
+      segments.push({
+        id: 'sav-segment',
+        color: '#38bdf8',
+        percentage: percentageSavings,
+        strokeDasharray: `${strokeLength} ${circumference - strokeLength}`,
+        strokeDashoffset: circumference - ((offset / 100) * circumference),
+      });
+      offset += percentageSavings;
+    }
+
     return segments;
   }, [financialStats]);
 
@@ -159,10 +204,13 @@ export default function ReportsPage() {
         
         let income = 0;
         let expense = 0;
+        let savings = 0;
         transactions.forEach((tx) => {
           if (tx.date === dateStr) {
             if (tx.type === 'income') {
               income += tx.amount;
+            } else if (isSavingsTx(tx)) {
+              savings += tx.amount;
             } else {
               expense += tx.amount;
             }
@@ -173,7 +221,7 @@ export default function ReportsPage() {
         const dayNum = d.getDate();
         const label = `${dayName} ${dayNum}`;
         
-        data.push({ label, income, expense });
+        data.push({ label, income, expense, savings });
       }
       return data;
     }
@@ -189,6 +237,7 @@ export default function ReportsPage() {
 
         let income = 0;
         let expense = 0;
+        let savings = 0;
         transactions.forEach((tx) => {
           const parts = tx.date.split('-');
           if (parts.length === 3) {
@@ -197,6 +246,8 @@ export default function ReportsPage() {
             if (txYear === year && txMonth === month) {
               if (tx.type === 'income') {
                 income += tx.amount;
+              } else if (isSavingsTx(tx)) {
+                savings += tx.amount;
               } else {
                 expense += tx.amount;
               }
@@ -205,7 +256,7 @@ export default function ReportsPage() {
         });
 
         const label = language === 'TH' ? monthsNameTH[month] : monthsNameEN[month];
-        data.push({ label, income, expense });
+        data.push({ label, income, expense, savings });
       }
       return data;
     }
@@ -218,6 +269,7 @@ export default function ReportsPage() {
 
         let income = 0;
         let expense = 0;
+        let savings = 0;
         transactions.forEach((tx) => {
           const parts = tx.date.split('-');
           if (parts.length === 3) {
@@ -225,6 +277,8 @@ export default function ReportsPage() {
             if (txYear === year) {
               if (tx.type === 'income') {
                 income += tx.amount;
+              } else if (isSavingsTx(tx)) {
+                savings += tx.amount;
               } else {
                 expense += tx.amount;
               }
@@ -233,7 +287,7 @@ export default function ReportsPage() {
         });
 
         const label = String(year);
-        data.push({ label, income, expense });
+        data.push({ label, income, expense, savings });
       }
       return data;
     }
@@ -254,6 +308,7 @@ export default function ReportsPage() {
     weeks.forEach((w) => {
       let income = 0;
       let expense = 0;
+      let savings = 0;
       
       transactions.forEach((tx) => {
         const parts = tx.date.split('-');
@@ -265,6 +320,8 @@ export default function ReportsPage() {
           if (txYear === year && txMonth === month && txDay >= w.start && txDay <= w.end) {
             if (tx.type === 'income') {
               income += tx.amount;
+            } else if (isSavingsTx(tx)) {
+              savings += tx.amount;
             } else {
               expense += tx.amount;
             }
@@ -273,22 +330,24 @@ export default function ReportsPage() {
       });
 
       const label = language === 'TH' ? w.nameTH : w.nameEN;
-      data.push({ label, income, expense });
+      data.push({ label, income, expense, savings });
     });
     
     return data;
-  }, [transactions, activeTab, language]);
+  }, [transactions, activeTab, language, isSavingsTx]);
 
   // Normalize column heights relative to the max transaction value
   const computedChartData = useMemo(() => {
-    const maxVal = Math.max(...trendsChartData.map(d => Math.max(d.income, d.expense)));
+    const maxVal = Math.max(...trendsChartData.map(d => Math.max(d.income, d.expense, d.savings || 0)));
     return trendsChartData.map(d => {
       const percentageInc = maxVal > 0 ? (d.income / maxVal) * 100 : 0;
       const percentageExp = maxVal > 0 ? (d.expense / maxVal) * 100 : 0;
+      const percentageSav = maxVal > 0 ? ((d.savings || 0) / maxVal) * 100 : 0;
       return {
         ...d,
         percentageInc: Math.max(d.income > 0 ? 8 : 0, percentageInc),
         percentageExp: Math.max(d.expense > 0 ? 8 : 0, percentageExp),
+        percentageSav: Math.max((d.savings || 0) > 0 ? 8 : 0, percentageSav),
       };
     });
   }, [trendsChartData]);
@@ -299,12 +358,12 @@ export default function ReportsPage() {
     return financialStats.breakdown[0]; // Already sorted descending
   }, [financialStats]);
 
-  // Simple slice of last 3 recent transactions
+  // Simple slice of last 3 recent transactions (excluding savings)
   const recentExpTransactions = useMemo(() => {
     return transactions
-      .filter((tx) => tx.type === 'expense')
+      .filter((tx) => tx.type === 'expense' && !isSavingsTx(tx))
       .slice(0, 3);
-  }, [transactions]);
+  }, [transactions, isSavingsTx]);
 
   return (
     <div className="flex flex-col flex-1 pb-6" id="reports_screen">
@@ -340,7 +399,7 @@ export default function ReportsPage() {
             className={`flex-1 py-1 sm:py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
               activeTab === 'year' 
                 ? 'bg-zinc-800 text-[#4edea3] shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-300'
+                : 'text-zinc-550 hover:text-zinc-350'
             }`}
           >
             {language === 'TH' ? 'รายปี' : 'Year'}
@@ -408,6 +467,7 @@ export default function ReportsPage() {
                   {formatCurrency(financialStats.totalInc)}
                 </span>
               </div>
+              
               <div className="bg-[#121212] border border-zinc-900 rounded-xl px-3 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <ArrowDownLeft className="w-3.5 h-3.5 text-[#ff7875]" />
@@ -417,6 +477,18 @@ export default function ReportsPage() {
                 </div>
                 <span className="font-mono text-sm font-bold text-[#ff7875]">
                   {formatCurrency(financialStats.totalExp)}
+                </span>
+              </div>
+
+              <div className="bg-[#121212] border border-zinc-900 rounded-xl px-3 py-2 flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <TrendingUp className="w-3.5 h-3.5 text-[#38bdf8]" />
+                  <span className="text-[10px] uppercase tracking-wider font-bold text-zinc-500">
+                    {language === 'TH' ? 'เงินออม' : 'Savings'}
+                  </span>
+                </div>
+                <span className="font-mono text-sm font-bold text-[#38bdf8]">
+                  {formatCurrency(financialStats.totalSavings)}
                 </span>
               </div>
             </div>
@@ -441,7 +513,7 @@ export default function ReportsPage() {
                         {language === 'TH' ? item.nameTH : item.nameEN}
                       </span>
                       <span className={`font-mono text-[11px] font-bold ml-2 shrink-0 ${
-                        item.type === 'income' ? 'text-[#4edea3]' : 'text-[#ff7875]'
+                        item.type === 'income' ? 'text-[#4edea3]' : item.type === 'savings' ? 'text-[#38bdf8]' : 'text-[#ff7875]'
                       }`}>
                         {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount)}
                       </span>
@@ -451,12 +523,12 @@ export default function ReportsPage() {
                         className="h-full rounded-full transition-all duration-700"
                         style={{
                           width: `${item.percentage}%`,
-                          background: item.type === 'income' ? '#4edea3' : '#ff7875',
+                          background: item.type === 'income' ? '#4edea3' : item.type === 'savings' ? '#38bdf8' : '#ff7875',
                         }}
                       />
                     </div>
                   </div>
-                  <span className="text-[10px] text-zinc-600 font-mono w-7 text-right shrink-0">
+                  <span className="text-[10px] text-zinc-650 font-mono w-7 text-right shrink-0">
                     {item.percentage}%
                   </span>
                 </div>
@@ -465,11 +537,11 @@ export default function ReportsPage() {
           </div>
         </section>
 
-        {/* SECTION 2: Income vs Expense Grouped Bar Chart */}
+        {/* SECTION 2: Income vs Expense vs Savings Grouped Bar Chart */}
         <section className="bg-[#121212] border border-zinc-900 rounded-2xl p-4">
           <div className="flex justify-between items-center mb-3">
             <h3 className="text-sm font-bold tracking-wide text-zinc-200">
-              {language === 'TH' ? 'เปรียบเทียบ รายได้ VS รายจ่าย' : 'Income vs Expense'}
+              {language === 'TH' ? 'เปรียบเทียบ รายได้ VS รายจ่าย VS เงินออม' : 'Inflow vs Outflow vs Savings'}
             </h3>
             <span className="px-2.5 py-0.5 rounded bg-zinc-900 text-zinc-500 border border-zinc-800 text-[10px] font-mono font-bold">
               {activeTab === 'week' && (language === 'TH' ? '7 วัน' : '7 Days')}
@@ -483,7 +555,7 @@ export default function ReportsPage() {
           <div className="flex items-end justify-around h-28 pt-1.5 border-b border-zinc-900">
             {computedChartData.map((data, index) => (
               <div key={index} className="flex flex-col items-center gap-1 flex-1 min-w-0">
-                <div className="flex items-end gap-[3px] h-20 w-full justify-center pb-1">
+                <div className="flex items-end gap-[2.5px] h-20 w-full justify-center pb-1">
                   
                   {/* Income column (Green accent) */}
                   <div 
@@ -499,6 +571,13 @@ export default function ReportsPage() {
                     style={{ height: `${(data.percentageExp / 100) * 80}px` }}
                   />
 
+                  {/* Savings column (Blue accent) */}
+                  <div 
+                    title={`Savings: ${formatCurrency(data.savings || 0)}`}
+                    className="w-2 bg-[#38bdf8] rounded-t-sm transition-all duration-700 hover:opacity-85" 
+                    style={{ height: `${(data.percentageSav / 100) * 80}px` }}
+                  />
+
                 </div>
                 {/* Labels */}
                 <span className="text-[10px] font-bold text-zinc-500 font-mono uppercase tracking-wide truncate max-w-full text-center">
@@ -509,17 +588,23 @@ export default function ReportsPage() {
           </div>
 
           {/* Color Indicator Legends footer */}
-          <div className="flex justify-center gap-6 mt-3">
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#4edea3]" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+          <div className="flex justify-center gap-4 mt-3">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#4edea3]" />
+              <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-400">
                 {language === 'TH' ? 'รายรับ' : 'Income'}
               </span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-[#ff7875]" />
-              <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-400">
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#ff7875]" />
+              <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-400">
                 {language === 'TH' ? 'รายจ่าย' : 'Expense'}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#38bdf8]" />
+              <span className="text-[9.5px] font-bold uppercase tracking-wider text-zinc-400">
+                {language === 'TH' ? 'เงินออม' : 'Savings'}
               </span>
             </div>
           </div>

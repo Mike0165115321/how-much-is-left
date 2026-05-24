@@ -35,56 +35,65 @@ body {
 
 /* Ambient background float animations */
 @keyframes floatSlow1 {
-  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  33% { transform: translate(45px, -65px) scale(1.18) rotate(120deg); }
-  66% { transform: translate(-35px, 35px) scale(0.85) rotate(240deg); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate3d(45px, -65px, 0) scale(1.18) rotate(120deg); }
+  66% { transform: translate3d(-35px, 35px, 0) scale(0.85) rotate(240deg); }
 }
 
 @keyframes floatSlow2 {
-  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
-  50% { transform: translate(-55px, 55px) scale(1.22) rotate(-180deg); }
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate3d(-55px, 55px, 0) scale(1.22) rotate(-180deg); }
 }
 
 .ambient-blob-1 {
   animation: floatSlow1 28s infinite alternate ease-in-out;
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 .ambient-blob-2 {
   animation: floatSlow2 36s infinite alternate ease-in-out;
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
 }
 
 /* Screen slide up entry transition - Highly optimized (eliminates blur and scale rendering overhead for smooth 60fps/120fps transitions) */
 @keyframes slideUpFade {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translate3d(0, 6px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
 .animate-screen-mount {
   animation: slideUpFade 0.22s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
+  will-change: transform, opacity;
 }
 
 /* Live financial pulse animation */
 @keyframes pulseRing {
   0% {
-    transform: scale(0.75);
+    transform: scale3d(0.75, 0.75, 1);
     opacity: 0;
   }
   55% {
     opacity: 0.55;
   }
   100% {
-    transform: scale(1.85);
+    transform: scale3d(1.85, 1.85, 1);
     opacity: 0;
   }
 }
 .pulse-ring-effect {
   animation: pulseRing 2.2s cubic-bezier(0.25, 0, 0, 1) infinite;
+  will-change: transform, opacity;
+  backface-visibility: hidden;
 }
 
 /* Safe area padding & margin helpers for notch & home-indicator spacing on iOS PWAs */

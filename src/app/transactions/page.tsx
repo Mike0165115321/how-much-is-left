@@ -26,6 +26,16 @@ export default function TransactionsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
 
+  // Helper to determine if a transaction is a savings transaction
+  const isSavingsTx = React.useCallback((tx: any) => {
+    return tx.type === 'expense' && 
+      (tx.categoryId === 'cat-savings' || 
+       tx.categoryId === 'cat-investment' || 
+       tx.categoryId.includes('saving') || 
+       tx.note.toLowerCase().includes('goal:') || 
+       tx.note.toLowerCase().includes('ออม'));
+  }, []);
+
   // 1. Scroll to top on screen mount
   React.useEffect(() => {
     window.scrollTo(0, 0);
@@ -310,7 +320,13 @@ export default function TransactionsPage() {
 
                         {/* Amount & Delete */}
                         <div className="flex items-center gap-4">
-                          <span className={`text-md font-bold font-mono ${tx.type === 'income' ? 'text-[#4edea3]' : 'text-rose-400'}`}>
+                          <span className={`text-md font-bold font-mono ${
+                            tx.type === 'income' 
+                              ? 'text-[#4edea3]' 
+                              : isSavingsTx(tx) 
+                                ? 'text-sky-400 font-extrabold' 
+                                : 'text-rose-400'
+                          }`}>
                             {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                           </span>
                           <button 
@@ -353,7 +369,13 @@ export default function TransactionsPage() {
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <span className={`text-sm font-bold font-mono ${tx.type === 'income' ? 'text-[#4edea3]' : 'text-[#ff7875]'}`}>
+                    <span className={`text-sm font-bold font-mono ${
+                      tx.type === 'income' 
+                        ? 'text-[#4edea3]' 
+                        : isSavingsTx(tx) 
+                          ? 'text-sky-400 font-extrabold' 
+                          : 'text-[#ff7875]'
+                    }`}>
                       {tx.type === 'income' ? '+' : '-'}{formatCurrency(tx.amount)}
                     </span>
                     <button 

@@ -57,9 +57,11 @@ interface FinanceState {
   transactions: Transaction[];
   lumpSums: LumpSum[];
   goals: Goal[];
+  enableAmbient: boolean;
 
   // Actions
   setLanguage: (lang: 'TH' | 'EN') => void;
+  setEnableAmbient: (enable: boolean) => void;
   setMonthlyBudgetGoal: (amount: number) => void;
   adjustBalance: (amount: number) => void;
   
@@ -100,6 +102,7 @@ const DEFAULT_CATEGORIES: Category[] = [
   { id: 'cat-salary', nameEN: 'Salary', nameTH: 'เงินเดือน', emoji: '💰', icon: 'Wallet', color: '#34d399' },
   { id: 'cat-bonus', nameEN: 'Bonus', nameTH: 'เงินพิเศษ', emoji: '🎁', icon: 'Gift', color: '#fb7185' },
   { id: 'cat-investment', nameEN: 'Investment', nameTH: 'ลงทุน', emoji: '📈', icon: 'TrendingUp', color: '#60a5fa' },
+  { id: 'cat-savings', nameEN: 'Savings', nameTH: 'เงินออม', emoji: '🎯', icon: 'Target', color: '#38bdf8' },
   { id: 'cat-business', nameEN: 'Business', nameTH: 'ธุรกิจ/ขายของ', emoji: '🏪', icon: 'Store', color: '#fbbf24' },
   { id: 'cat-other-income', nameEN: 'Other Income', nameTH: 'รายได้อื่น ๆ', emoji: '💵', icon: 'Banknote', color: '#f472b6' },
   { id: 'cat-project', nameEN: 'Project', nameTH: 'รายได้จากโปรเจกต์', emoji: '💼', icon: 'Briefcase', color: '#a78bfa' },
@@ -181,8 +184,10 @@ export const useFinanceStore = create<FinanceState>()(
       transactions: DEFAULT_TRANSACTIONS,
       lumpSums: DEFAULT_LUMP_SUMS,
       goals: DEFAULT_GOALS,
+      enableAmbient: true,
 
       setLanguage: (lang) => set({ language: lang }),
+      setEnableAmbient: (enable) => set({ enableAmbient: enable }),
       
       setMonthlyBudgetGoal: (amount) => set({ monthlyBudgetGoal: amount }),
       
@@ -422,7 +427,7 @@ export const useFinanceStore = create<FinanceState>()(
             id: `tx-goal-${Date.now()}`,
             type: 'expense',
             amount: amount,
-            categoryId: 'cat-investment',
+            categoryId: 'cat-savings',
             note: `Goal: ${targetGoal?.title || 'Contribute'}`,
             date: new Date().toISOString().split('T')[0],
           };
@@ -457,6 +462,7 @@ export const useFinanceStore = create<FinanceState>()(
           transactions: DEFAULT_TRANSACTIONS,
           lumpSums: DEFAULT_LUMP_SUMS,
           goals: DEFAULT_GOALS,
+          enableAmbient: true,
         });
       },
     }),

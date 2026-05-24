@@ -156,19 +156,19 @@ export default function GoalsPage() {
       <header className="px-6 pt-6 pb-2 border-b border-zinc-900 sticky top-0 bg-black/95 z-10 flex justify-between items-center">
         <div>
           <span className="text-zinc-500 text-[10px] uppercase tracking-widest font-mono">
-            {language === 'TH' ? 'ระบบติดตามเป้าหมายการเงิน' : 'Target Hub'}
+            {language === 'TH' ? 'ระบบจัดการกระแสเงินออม' : 'Savings Flow Manager'}
           </span>
           <h1 className="text-2xl font-bold text-zinc-100 mt-1 tracking-tight">
-            {language === 'TH' ? 'เป้าหมายและงบประมาณ' : 'Financial Goals'}
+            {language === 'TH' ? 'จัดการเงินออม' : 'Manage Savings'}
           </h1>
         </div>
         <button 
           id="add_new_goal_btn"
           onClick={() => setShowAddGoalModal(true)}
-          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#4edea3]/10 border border-[#4edea3]/20 hover:border-[#4edea3]/40 text-xs font-semibold text-[#4edea3] rounded-full active:scale-95 transition-all outline-none"
+          className="flex items-center gap-1.5 px-3 py-1.5 bg-[#38bdf8]/10 border border-[#38bdf8]/20 hover:border-[#38bdf8]/40 text-xs font-semibold text-[#38bdf8] rounded-full active:scale-95 transition-all outline-none"
         >
           <Plus className="w-3.5 h-3.5" />
-          <span>{language === 'TH' ? 'สร้างเป้าหมาย' : 'New Goal'}</span>
+          <span>{language === 'TH' ? 'เพิ่มเป้าหมายออมเงิน' : 'Add Savings Goal'}</span>
         </button>
       </header>
 
@@ -439,7 +439,7 @@ export default function GoalsPage() {
               <button 
                 id="save_new_goal_btn"
                 onClick={handleSaveGoal}
-                className="w-full bg-[#4edea3] hover:opacity-95 text-[#003824] font-bold py-3 rounded-lg text-sm transition-all active:scale-[0.98] mt-2 cursor-pointer shadow-md"
+                className="w-full bg-[#38bdf8] hover:opacity-95 text-zinc-950 font-bold py-3 rounded-lg text-sm transition-all active:scale-[0.98] mt-2 cursor-pointer shadow-md"
               >
                 {language === 'TH' ? 'บันทึกและเปิดใช้งานเป้าหมาย' : 'Create Target Goal'}
               </button>
@@ -476,13 +476,13 @@ export default function GoalsPage() {
                 onChange={(e) => handleAmountChange(e.target.value, setContributionAmt)}
                 placeholder="2,000"
                 autoFocus
-                className="bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-center text-lg font-bold text-[#4edea3] outline-none focus:border-[#4edea3] font-mono w-full"
+                className="bg-zinc-950 border border-zinc-800 rounded-lg py-2.5 px-3 text-center text-lg font-bold text-[#38bdf8] outline-none focus:border-[#38bdf8] font-mono w-full"
               />
 
               <button 
                 id="save_contribution_btn"
                 onClick={handleContributeSubmit}
-                className="w-full bg-[#4edea3] hover:opacity-90 font-bold text-[#003824] py-2.5 rounded-lg text-xs transition-transform active:scale-95 cursor-pointer"
+                className="w-full bg-[#38bdf8] hover:opacity-90 font-bold text-zinc-950 py-2.5 rounded-lg text-xs transition-transform active:scale-95 cursor-pointer"
               >
                 {language === 'TH' ? 'ยืนยันโอนออมเงิน' : 'Transfer & Add Contribution'}
               </button>

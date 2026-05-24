@@ -43,6 +43,17 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
   const hasActivityToday = todayIncome > 0 || todayExpense > 0;
   const latestTx = transactions[0];
 
+  // Helper to determine if a transaction is a savings transaction
+  const isSavingsTx = React.useCallback((tx: any) => {
+    if (!tx) return false;
+    return tx.type === 'expense' && 
+      (tx.categoryId === 'cat-savings' || 
+       tx.categoryId === 'cat-investment' || 
+       tx.categoryId.includes('saving') || 
+       tx.note.toLowerCase().includes('goal:') || 
+       tx.note.toLowerCase().includes('ออม'));
+  }, []);
+
   // Calculate overall cash flow volume metrics
   const totalIncome = transactions
     .filter(tx => tx.type === 'income')
@@ -215,7 +226,21 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
             </span>
           </button>
 
-          {/* Card 4: Today's Summary / Latest Activity Dynamic Card */}
+          {/* Card 4: Manage Savings */}
+          <button 
+            id="menu_goals_btn"
+            onClick={() => onNavigate('goals')}
+            className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-sky-900/40 hover:shadow-[0_8px_30px_rgba(56,189,248,0.06)] transition-all active:scale-[0.95] cursor-pointer"
+          >
+            <div className="w-12 h-12 rounded-xl bg-sky-950/10 border border-sky-900/30 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
+              <Target className="w-5.5 h-5.5 text-sky-400" />
+            </div>
+            <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight text-center leading-tight">
+              {language === 'TH' ? 'จัดการเงินออม' : 'Manage Savings'}
+            </span>
+          </button>
+
+          {/* Card 5: Today's Summary / Latest Activity Dynamic Card */}
           {hasActivityToday ? (
             <button 
               id="menu_today_summary_btn"
@@ -256,31 +281,36 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
                         {latestTx.note || (catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : 'Transaction')}
                       </span>
                     </div>
-                    <p className={`text-[14px] sm:text-[15px] font-extrabold font-mono mt-0.5 ${isExpense ? 'text-[#ff7875]' : 'text-[#4edea3]'}`}>
-                      {isExpense ? '-' : '+'}{formatCurrency(latestTx.amount)}
+                    <p className={`text-[14px] sm:text-[15px] font-extrabold font-mono mt-0.5 ${
+                      isSavingsTx(latestTx)
+                        ? 'text-sky-400'
+                        : isExpense
+                          ? 'text-[#ff7875]'
+                          : 'text-[#4edea3]'
+                    }`}>
+                      {latestTx.type === 'income' ? '+' : '-'}{formatCurrency(latestTx.amount)}
                     </p>
                   </div>
                 );
               })()}
             </button>
           ) : (
-            <button 
+            <div 
               id="menu_today_summary_btn"
-              onClick={() => onOpenAddTransaction('expense')}
-              className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-zinc-800/80 hover:shadow-[0_8px_30px_rgba(255,255,255,0.02)] transition-all active:scale-[0.95] text-left w-full cursor-pointer"
+              className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-zinc-800/80 hover:shadow-[0_8px_30px_rgba(255,255,255,0.02)] transition-all text-left w-full cursor-default"
             >
               <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight leading-tight">
                 {language === 'TH' ? 'สรุปวันนี้' : 'Today\'s Total'}
               </span>
               <div className="w-full flex flex-col gap-1 mt-auto">
-                <span className="text-[10px] sm:text-[11px] text-[#4edea3] font-bold leading-normal">
-                  {language === 'TH' ? '💡 แตะเริ่มบันทึกรายการแรก!' : '💡 Tap to record first!'}
+                <span className="text-[10px] sm:text-[11px] text-[#4edea3]/70 font-semibold leading-normal">
+                  {language === 'TH' ? '💡 ยังไม่มีธุรกรรมในวันนี้' : '💡 No transactions today'}
                 </span>
               </div>
-            </button>
+            </div>
           )}
 
-          {/* Card 5: Monthly Summary (Reports and Charts) */}
+          {/* Card 6: Monthly Summary (Reports and Charts) */}
           <button 
             id="menu_reports_btn"
             onClick={() => onNavigate('reports')}
@@ -291,20 +321,6 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
             </div>
             <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight text-center leading-tight">
               {language === 'TH' ? 'สรุปรายเดือน' : 'Monthly Summary'}
-            </span>
-          </button>
-
-          {/* Card 6: Goals and Budget */}
-          <button 
-            id="menu_goals_btn"
-            onClick={() => onNavigate('goals')}
-            className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-purple-900/40 hover:shadow-[0_8px_30px_rgba(167,139,250,0.06)] transition-all active:scale-[0.95] cursor-pointer"
-          >
-            <div className="w-12 h-12 rounded-xl bg-purple-950/10 border border-purple-900/30 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
-              <Target className="w-5.5 h-5.5 text-purple-400" />
-            </div>
-            <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight text-center leading-tight">
-              {language === 'TH' ? 'เป้าหมายรายเดือน' : 'Goals & Targets'}
             </span>
           </button>
 
