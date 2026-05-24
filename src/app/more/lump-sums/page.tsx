@@ -47,11 +47,7 @@ export default function LumpSumsPage() {
   const [newLumpAmount, setNewLumpAmount] = useState('');
   
   // Custom Allocations inside add-lump flow
-  const [allocations, setAllocations] = useState<Array<{ title: string; amount: number }>>([
-    { title: 'Rent for 3 Months', amount: 12000 },
-    { title: 'Buy MacBook', amount: 35000 },
-    { title: 'Emergency Fund', amount: 3000 }
-  ]);
+  const [allocations, setAllocations] = useState<Array<{ title: string; amount: number }>>([]);
 
   const [newAllocTitle, setNewAllocTitle] = useState('');
   const [newAllocAmount, setNewAllocAmount] = useState('');

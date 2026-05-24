@@ -148,40 +148,7 @@ const DEFAULT_TRANSACTIONS: Transaction[] = [
   }
 ];
 
-const DEFAULT_LUMP_SUMS: LumpSum[] = [
-  {
-    id: 'lump-1',
-    title: 'Bonus 2026',
-    amount: 50000,
-    date: '2026-01-15',
-    allocations: [
-      {
-        id: 'alloc-1',
-        title: 'Rent for 3 Months',
-        amount: 12000,
-        status: 'spent',
-        icon: 'Home',
-        categoryEmoji: '🏠',
-      },
-      {
-        id: 'alloc-2',
-        title: 'Buy MacBook',
-        amount: 35000,
-        status: 'spent',
-        icon: 'Laptop',
-        categoryEmoji: '💻',
-      },
-      {
-        id: 'alloc-3',
-        title: 'Emergency Fund',
-        amount: 3000,
-        status: 'pending',
-        icon: 'ShieldAlert',
-        categoryEmoji: '🏥',
-      },
-    ],
-  },
-];
+const DEFAULT_LUMP_SUMS: LumpSum[] = [];
 
 const DEFAULT_GOALS: Goal[] = [
   {
@@ -262,8 +229,19 @@ export const useFinanceStore = create<FinanceState>()(
           allocations,
         };
 
+        // Create deterministic Income Transaction for this Windfall lump sum
+        const incomeTx: Transaction = {
+          id: `tx-lump-income-${lumpId}`,
+          type: 'income',
+          amount: lump.amount,
+          categoryId: 'cat-bonus', // default windfall category
+          note: `[Lump Sum] ${lump.title}`,
+          date: lump.date,
+        };
+
         set((state) => ({
           lumpSums: [...state.lumpSums, newLump],
+          transactions: [incomeTx, ...state.transactions],
           netBalance: state.netBalance + lump.amount, // Adding custom windfall to overall wallet balance
         }));
       },
@@ -273,8 +251,17 @@ export const useFinanceStore = create<FinanceState>()(
           const target = state.lumpSums.find((l) => l.id === id);
           if (!target) return {};
           
+          // Remove the windfall income transaction and all its spent allocation transactions
+          const allocTxIds = target.allocations.map(a => `tx-lump-alloc-${a.id}`);
+          const targetIncomeTxId = `tx-lump-income-${id}`;
+          
+          const filteredTransactions = state.transactions.filter(
+            (t) => t.id !== targetIncomeTxId && !allocTxIds.includes(t.id)
+          );
+
           return {
             lumpSums: state.lumpSums.filter((l) => l.id !== id),
+            transactions: filteredTransactions,
             netBalance: state.netBalance - target.amount, // Deduct the initial lump sum contribution
           };
         });
@@ -283,7 +270,7 @@ export const useFinanceStore = create<FinanceState>()(
       toggleAllocationStatus: (lumpSumId, allocationId) => {
         set((state) => {
           let txChange = 0;
-          let addedTx: Transaction | null = null;
+          let nextTransactions = [...state.transactions];
 
           const updatedLumps = state.lumpSums.map((lump) => {
             if (lump.id !== lumpSumId) return lump;
@@ -292,22 +279,24 @@ export const useFinanceStore = create<FinanceState>()(
               if (alloc.id !== allocationId) return alloc;
 
               const newStatus = (alloc.status === 'pending' ? 'spent' : 'pending') as 'pending' | 'spent';
+              const deterministicTxId = `tx-lump-alloc-${allocationId}`;
               
-              // Automatically record or adjust transaction log when allocated funds are 'spent'
               if (newStatus === 'spent') {
                 txChange = -alloc.amount;
-                // Create auto transaction
-                addedTx = {
-                  id: `tx-auto-${Date.now()}`,
+                // Create auto transaction with deterministic ID
+                const addedTx: Transaction = {
+                  id: deterministicTxId,
                   type: 'expense',
                   amount: alloc.amount,
-                  categoryId: 'cat-utilities', // default utility or dynamic category
-                  note: `[Allocated] ${alloc.title}`,
+                  categoryId: 'cat-utilities', // default utility
+                  note: `[Spent] ${alloc.title}`,
                   date: new Date().toISOString().split('T')[0],
                 };
+                nextTransactions = [addedTx, ...nextTransactions];
               } else {
-                // If toggled back to pending, restore the money
+                // If toggled back to pending, restore the money and delete the transaction
                 txChange = alloc.amount;
+                nextTransactions = nextTransactions.filter(t => t.id !== deterministicTxId);
               }
 
               return { ...alloc, status: newStatus };
@@ -315,10 +304,6 @@ export const useFinanceStore = create<FinanceState>()(
 
             return { ...lump, allocations: updatedAllocations };
           });
-
-          const nextTransactions = addedTx 
-            ? [addedTx, ...state.transactions] 
-            : state.transactions;
 
           return {
             lumpSums: updatedLumps,
@@ -330,6 +315,8 @@ export const useFinanceStore = create<FinanceState>()(
 
       updateAllocationAmount: (lumpSumId, allocationId, amount) => {
         set((state) => {
+          let nextTransactions = [...state.transactions];
+          
           const updatedLumps = state.lumpSums.map((lump) => {
             if (lump.id !== lumpSumId) return lump;
 
@@ -343,16 +330,23 @@ export const useFinanceStore = create<FinanceState>()(
               return { ...alloc, amount };
             });
 
-            // If the allocation is already spent, modifying the amount will adjust netBalance
+            // If the allocation is already spent, modifying the amount will adjust netBalance and the transaction amount
             const diff = amount - prevAmount;
             if (currentStatus === 'spent') {
               state.adjustBalance(-diff);
+              // Update the auto-created transaction amount as well!
+              nextTransactions = nextTransactions.map(t => {
+                if (t.id === `tx-lump-alloc-${allocationId}`) {
+                  return { ...t, amount };
+                }
+                return t;
+              });
             }
 
             return { ...lump, allocations: updatedAllocations };
           });
 
-          return { lumpSums: updatedLumps };
+          return { lumpSums: updatedLumps, transactions: nextTransactions };
         });
       },
 
@@ -375,15 +369,18 @@ export const useFinanceStore = create<FinanceState>()(
 
       deleteAllocationFromLumpSum: (lumpSumId, allocationId) => {
         set((state) => {
+          let nextTransactions = [...state.transactions];
+          
           const updatedLumps = state.lumpSums.map((lump) => {
             if (lump.id !== lumpSumId) return lump;
             
             const targetAlloc = lump.allocations.find(a => a.id === allocationId);
             if (!targetAlloc) return lump;
             
-            // If the deleted allocation was already marked as spent, refund it
+            // If the deleted allocation was already marked as spent, refund it and delete the transaction
             if (targetAlloc.status === 'spent') {
               state.adjustBalance(targetAlloc.amount);
+              nextTransactions = nextTransactions.filter(t => t.id !== `tx-lump-alloc-${allocationId}`);
             }
 
             return {
@@ -391,7 +388,7 @@ export const useFinanceStore = create<FinanceState>()(
               allocations: lump.allocations.filter(a => a.id !== allocationId),
             };
           });
-          return { lumpSums: updatedLumps };
+          return { lumpSums: updatedLumps, transactions: nextTransactions };
         });
       },
 
@@ -464,7 +461,7 @@ export const useFinanceStore = create<FinanceState>()(
       },
     }),
     {
-      name: 'how-much-is-left-storage-v3',
+      name: 'how-much-is-left-storage-v4',
     }
   )
 );
