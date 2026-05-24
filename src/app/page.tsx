@@ -13,6 +13,7 @@ import {
   Sparkles,
   Settings
 } from 'lucide-react';
+import AnimatedNumber from '../components/AnimatedNumber';
 
 interface DashboardProps {
   onNavigate: (screen: string) => void;
@@ -57,12 +58,37 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
 
 
   // Format currency
-  const formatCurrency = (val: number) => {
+  const formatCurrency = React.useCallback((val: number) => {
     return new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB', minimumFractionDigits: 0, maximumFractionDigits: 0 })
       .format(val)
       .replace('THB', '฿')
       .trim();
-  };  return (
+  }, []);
+
+  // Living pulse state calculation based on daily budget and savings
+  const pulseStatusText = React.useMemo(() => {
+    if (!hasActivityToday) {
+      return language === 'TH' 
+        ? 'แดชบอร์ดพร้อมทำงาน เริ่มบันทึกธุรกรรมวันนี้กันเลย 🚀' 
+        : 'System active & safe. Start logging transactions! 🚀';
+    }
+    const netToday = todayIncome - todayExpense;
+    if (netToday > 0) {
+      return language === 'TH' 
+        ? `ยินดีด้วย! วันนี้ยอดสะสมเป็นบวก +${formatCurrency(netToday)} 📈` 
+        : `Congrats! Saving rate is positive +${formatCurrency(netToday)} today 📈`;
+    } else if (netToday < 0) {
+      return language === 'TH' 
+        ? `วันนี้กระแสเงินไหลออก -${formatCurrency(Math.abs(netToday))} ใช้สอยอย่างมีสตินะคะ 💸` 
+        : `Outflow registered today -${formatCurrency(Math.abs(netToday))}. Mind your budget! 💸`;
+    } else {
+      return language === 'TH' 
+        ? 'รายรับกับรายจ่ายวันนี้สมดุลกันพอดี ⚖️' 
+        : 'Income and expenses are perfectly balanced today ⚖️';
+    }
+  }, [hasActivityToday, todayIncome, todayExpense, language, formatCurrency]);
+
+  return (
     <div className="flex flex-col flex-1" id="dashboard_screen">
       {/* Top Header Section */}
       <header className="px-4 pt-6 pb-4 sm:px-6 sm:pt-10 sm:pb-8 flex flex-col items-center justify-center text-center relative border-b border-zinc-950/20">
@@ -106,8 +132,19 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
           id="net_balance_display"
           className="text-[#4edea3] font-extrabold text-4xl sm:text-5xl md:text-6xl tracking-tight mb-1.5 select-none drop-shadow-[0_0_35px_rgba(78,222,163,0.15)] filter"
         >
-          {formatCurrency(totalFlow)}
+          <AnimatedNumber value={totalFlow} formatter={formatCurrency} />
         </h1>
+
+        {/* Dynamic Living pulse indicator */}
+        <div className="mt-3.5 mb-2.5 flex items-center gap-2.5 px-4.5 py-2.5 bg-zinc-900/40 border border-zinc-900/60 rounded-full shadow-inner select-none max-w-sm sm:max-w-md mx-auto hover:border-zinc-800 transition-colors">
+          <div className="relative flex h-2 w-2 shrink-0">
+            <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 pulse-ring-effect"></span>
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#4edea3]"></span>
+          </div>
+          <span className="text-[11.5px] font-bold text-zinc-300 tracking-tight leading-tight select-none">
+            {pulseStatusText}
+          </span>
+        </div>
 
         {/* Circular-style Progress Bar to Monthly Goal */}
         <div className="w-full max-w-xs mx-auto mt-2.5 sm:mt-4 flex flex-col items-center">
@@ -140,7 +177,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
           <button 
             id="menu_add_expense_btn"
             onClick={() => onOpenAddTransaction('expense')}
-            className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97]"
+            className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-rose-900/40 hover:shadow-[0_8px_30px_rgba(244,63,94,0.06)] transition-all active:scale-[0.95] cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-rose-950/20 border border-rose-900/30 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
               <ShoppingCart className="w-5.5 h-5.5 text-rose-400" />
@@ -154,7 +191,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
           <button 
             id="menu_add_income_btn"
             onClick={() => onOpenAddTransaction('income')}
-            className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97]"
+            className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-emerald-900/40 hover:shadow-[0_8px_30px_rgba(78,222,163,0.07)] transition-all active:scale-[0.95] cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-emerald-950/20 border border-emerald-900/30 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
               <Wallet className="w-5.5 h-5.5 text-[#4edea3]" />
@@ -168,7 +205,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
           <button 
             id="menu_lump_sum_btn"
             onClick={() => onNavigate('lump-sums')}
-            className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97]"
+            className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-yellow-900/40 hover:shadow-[0_8px_30px_rgba(245,158,11,0.06)] transition-all active:scale-[0.95] cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-yellow-950/20 border border-yellow-900/30 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
               <Gift className="w-5.5 h-5.5 text-amber-400" />
@@ -183,7 +220,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
             <button 
               id="menu_today_summary_btn"
               onClick={() => onNavigate('transactions')}
-              className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97] text-left w-full cursor-pointer"
+              className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-emerald-900/30 hover:shadow-[0_8px_30px_rgba(78,222,163,0.06)] transition-all active:scale-[0.95] text-left w-full cursor-pointer"
             >
               <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight leading-tight mb-1">
                 {language === 'TH' ? 'สรุปวันนี้' : 'Today\'s Total'}
@@ -203,7 +240,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
             <button 
               id="menu_today_summary_btn"
               onClick={() => onNavigate('transactions')}
-              className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97] text-left w-full cursor-pointer"
+              className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-zinc-800/80 hover:shadow-[0_8px_30px_rgba(255,255,255,0.03)] transition-all active:scale-[0.95] text-left w-full cursor-pointer"
             >
               <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight mb-1">
                 {language === 'TH' ? 'ธุรกรรมล่าสุด' : 'Latest Activity'}
@@ -230,7 +267,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
             <button 
               id="menu_today_summary_btn"
               onClick={() => onOpenAddTransaction('expense')}
-              className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97] text-left w-full cursor-pointer"
+              className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-start justify-between h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-zinc-800/80 hover:shadow-[0_8px_30px_rgba(255,255,255,0.02)] transition-all active:scale-[0.95] text-left w-full cursor-pointer"
             >
               <span className="font-bold text-zinc-100 text-sm sm:text-base tracking-tight leading-tight">
                 {language === 'TH' ? 'สรุปวันนี้' : 'Today\'s Total'}
@@ -247,7 +284,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
           <button 
             id="menu_reports_btn"
             onClick={() => onNavigate('reports')}
-            className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97]"
+            className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-blue-900/40 hover:shadow-[0_8px_30px_rgba(59,130,246,0.06)] transition-all active:scale-[0.95] cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-blue-950/20 border border-blue-900/30 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
               <PieChart className="w-5.5 h-5.5 text-blue-400" />
@@ -261,7 +298,7 @@ export default function Dashboard({ onNavigate, onOpenAddTransaction }: Dashboar
           <button 
             id="menu_goals_btn"
             onClick={() => onNavigate('goals')}
-            className="group bg-[#121212] border border-zinc-900 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/80 hover:border-zinc-800 transition-all active:scale-[0.97]"
+            className="group bg-[#121212]/80 backdrop-blur-md border border-zinc-900/60 rounded-2xl p-4 sm:p-5 flex flex-col items-center justify-center h-[130px] sm:h-[150px] aspect-auto hover:bg-zinc-900/90 hover:border-purple-900/40 hover:shadow-[0_8px_30px_rgba(167,139,250,0.06)] transition-all active:scale-[0.95] cursor-pointer"
           >
             <div className="w-12 h-12 rounded-xl bg-purple-950/10 border border-purple-900/30 flex items-center justify-center mb-2 group-hover:scale-105 transition-transform">
               <Target className="w-5.5 h-5.5 text-purple-400" />

@@ -32,3 +32,60 @@ body {
 .cursor-blink {
   animation: blink 1.2s step-end infinite;
 }
+
+/* Ambient background float animations */
+@keyframes floatSlow1 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  33% { transform: translate(45px, -65px) scale(1.18) rotate(120deg); }
+  66% { transform: translate(-35px, 35px) scale(0.85) rotate(240deg); }
+}
+
+@keyframes floatSlow2 {
+  0%, 100% { transform: translate(0, 0) scale(1) rotate(0deg); }
+  50% { transform: translate(-55px, 55px) scale(1.22) rotate(-180deg); }
+}
+
+.ambient-blob-1 {
+  animation: floatSlow1 28s infinite alternate ease-in-out;
+}
+
+.ambient-blob-2 {
+  animation: floatSlow2 36s infinite alternate ease-in-out;
+}
+
+/* Screen slide up entry transition */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.995);
+    filter: blur(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0px);
+  }
+}
+
+.animate-screen-mount {
+  animation: slideUpFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Live financial pulse animation */
+@keyframes pulseRing {
+  0% {
+    transform: scale(0.75);
+    opacity: 0;
+  }
+  55% {
+    opacity: 0.55;
+  }
+  100% {
+    transform: scale(1.85);
+    opacity: 0;
+  }
+}
+.pulse-ring-effect {
+  animation: pulseRing 2.2s cubic-bezier(0.25, 0, 0, 1) infinite;
+}
+

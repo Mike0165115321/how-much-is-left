@@ -312,12 +312,21 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen text-zinc-100 flex flex-col relative max-w-xl mx-auto border-x border-zinc-950/60 shadow-2xl bg-black">
+    <div className="min-h-screen text-zinc-100 flex flex-col relative max-w-xl mx-auto border-x border-zinc-950/60 shadow-2xl bg-black overflow-hidden">
       <SplashScreen forcePlay={forceSplash} onComplete={() => setForceSplash(false)} />
       
+      {/* 🌌 living ambient floating backdrops */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-[15%] left-[-25%] w-[320px] h-[320px] rounded-full bg-emerald-500/6 blur-[85px] ambient-blob-1" />
+        <div className="absolute bottom-[20%] right-[-25%] w-[380px] h-[380px] rounded-full bg-purple-500/4 blur-[95px] ambient-blob-2" />
+        <div className="absolute top-[55%] right-[-15%] w-[260px] h-[260px] rounded-full bg-blue-500/4 blur-[80px] ambient-blob-1" style={{ animationDelay: '-6s' }} />
+      </div>
+      
       {/* Screen view target mounts */}
-      <div className="flex-1 flex flex-col pb-26 overflow-x-hidden">
-        {renderCurrentScreen()}
+      <div className="flex-1 flex flex-col pb-26 overflow-x-hidden z-10 relative">
+        <div key={currentScreen} className="flex-1 flex flex-col animate-screen-mount">
+          {renderCurrentScreen()}
+        </div>
       </div>
 
       {/* Bottom high-contrast Navigation Bar representing universal triggers */}
