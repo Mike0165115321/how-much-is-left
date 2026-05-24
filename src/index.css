@@ -53,22 +53,20 @@ body {
   animation: floatSlow2 36s infinite alternate ease-in-out;
 }
 
-/* Screen slide up entry transition */
+/* Screen slide up entry transition - Highly optimized (eliminates blur and scale rendering overhead for smooth 60fps/120fps transitions) */
 @keyframes slideUpFade {
   from {
     opacity: 0;
-    transform: translateY(14px) scale(0.995);
-    filter: blur(3px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: translateY(0) scale(1);
-    filter: blur(0px);
+    transform: translateY(0);
   }
 }
 
 .animate-screen-mount {
-  animation: slideUpFade 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation: slideUpFade 0.22s cubic-bezier(0.215, 0.61, 0.355, 1) forwards;
 }
 
 /* Live financial pulse animation */
