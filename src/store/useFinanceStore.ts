@@ -27,6 +27,7 @@ export interface Allocation {
   status: 'pending' | 'spent';
   icon: string; // Lucide icon name
   categoryEmoji?: string;
+  color?: string; // Hex color code
 }
 
 export interface LumpSum {
@@ -71,6 +72,8 @@ interface FinanceState {
   deleteLumpSum: (id: string) => void;
   toggleAllocationStatus: (lumpSumId: string, allocationId: string) => void;
   updateAllocationAmount: (lumpSumId: string, allocationId: string, amount: number) => void;
+  addAllocationToLumpSum: (lumpSumId: string, allocation: Omit<Allocation, 'id'>) => void;
+  deleteAllocationFromLumpSum: (lumpSumId: string, allocationId: string) => void;
 
   // Goal Actions
   addGoal: (goal: Omit<Goal, 'id'>) => void;
@@ -349,6 +352,45 @@ export const useFinanceStore = create<FinanceState>()(
             return { ...lump, allocations: updatedAllocations };
           });
 
+          return { lumpSums: updatedLumps };
+        });
+      },
+
+      addAllocationToLumpSum: (lumpSumId, allocation) => {
+        set((state) => {
+          const updatedLumps = state.lumpSums.map((lump) => {
+            if (lump.id !== lumpSumId) return lump;
+            const newAlloc: Allocation = {
+              ...allocation,
+              id: `alloc-${Date.now()}`,
+            };
+            return {
+              ...lump,
+              allocations: [...lump.allocations, newAlloc],
+            };
+          });
+          return { lumpSums: updatedLumps };
+        });
+      },
+
+      deleteAllocationFromLumpSum: (lumpSumId, allocationId) => {
+        set((state) => {
+          const updatedLumps = state.lumpSums.map((lump) => {
+            if (lump.id !== lumpSumId) return lump;
+            
+            const targetAlloc = lump.allocations.find(a => a.id === allocationId);
+            if (!targetAlloc) return lump;
+            
+            // If the deleted allocation was already marked as spent, refund it
+            if (targetAlloc.status === 'spent') {
+              state.adjustBalance(targetAlloc.amount);
+            }
+
+            return {
+              ...lump,
+              allocations: lump.allocations.filter(a => a.id !== allocationId),
+            };
+          });
           return { lumpSums: updatedLumps };
         });
       },

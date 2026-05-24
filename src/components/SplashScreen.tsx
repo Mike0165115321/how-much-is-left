@@ -43,10 +43,10 @@ export default function SplashScreen({ forcePlay = false, onComplete }: SplashSc
 
   return (
     <div 
-      className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-black overflow-hidden select-none transition-all duration-1000 ease-in-out ${
+      className={`absolute inset-0 z-[9999] flex flex-col items-center justify-center bg-black overflow-hidden select-none transition-all duration-1000 ease-in-out ${
         isFadingOut 
-          ? 'opacity-0 scale-[1.05] pointer-events-none' 
-          : 'opacity-100 scale-100'
+          ? 'opacity-0 pointer-events-none' 
+          : 'opacity-100'
       }`}
       style={{
         background: 'radial-gradient(circle at center, #0f1612 0%, #030403 100%)'
@@ -143,8 +143,11 @@ export default function SplashScreen({ forcePlay = false, onComplete }: SplashSc
         }
 
         .logo-image-glow {
-          box-shadow: 0 0 40px rgba(78, 222, 163, 0.1);
-          animation: subtlePulse 5s infinite ease-in-out 1.6s;
+          box-shadow: 0 0 40px rgba(78, 222, 163, 0.35), inset 0 0 20px rgba(78, 222, 163, 0.15);
+          border: 1.5px solid rgba(78, 222, 163, 0.3) !important;
+          background: rgba(10, 25, 18, 0.7) !important;
+          backdrop-filter: blur(12px);
+          animation: subtlePulse 4s infinite ease-in-out 1.6s;
         }
       `}</style>
 
@@ -155,7 +158,9 @@ export default function SplashScreen({ forcePlay = false, onComplete }: SplashSc
 
       {/* 2. SVG Flowing Wavy Lines (Matches the curvy ribbons in the icon) */}
       <svg 
-        className="absolute inset-0 w-full h-full pointer-events-none select-none" 
+        className={`absolute inset-0 w-full h-full pointer-events-none select-none transition-opacity duration-700 ${
+          isFadingOut ? 'opacity-0' : 'opacity-100'
+        }`}
         viewBox="0 0 1000 1000" 
         preserveAspectRatio="none"
       >
@@ -185,22 +190,34 @@ export default function SplashScreen({ forcePlay = false, onComplete }: SplashSc
         />
       </svg>
 
-      {/* 3. Core Brand Animation Block */}
-      <div className="flex flex-col items-center justify-center z-10 gap-8 max-w-xs text-center">
+      {/* 3. Core Brand Animation Block with independent exit motion paths */}
+      <div className="absolute inset-0 z-10 pointer-events-none">
         
-        {/* Animated Icon Image */}
-        <div className="logo-reveal opacity-0 scale-90 flex items-center justify-center">
-          <div className="relative p-1 bg-zinc-950/60 rounded-3xl border border-zinc-800/80 shadow-[0_20px_50px_rgba(0,0,0,0.8)] logo-image-glow">
-            <img 
-              src="/favicon.png" 
-              alt="How Much Is Left Logo" 
-              className="w-32 h-32 object-contain rounded-[22px] select-none pointer-events-none"
-            />
+        {/* Animated Icon Image - fly and shrink to top-left on exit */}
+        <div 
+          className={`absolute transition-all duration-1000 cubic-bezier(0.16, 1, 0.3, 1) pointer-events-auto ${
+            isFadingOut 
+              ? 'top-4 left-6 translate-x-0 translate-y-0 scale-[0.3] origin-top-left opacity-0' 
+              : 'top-[calc(50%-80px)] left-1/2 -translate-x-1/2 -translate-y-1/2 scale-100 opacity-100'
+          }`}
+        >
+          <div className="logo-reveal opacity-0 scale-90 flex items-center justify-center">
+            <div className="relative p-1 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] logo-image-glow">
+              <img 
+                src="/favicon.png" 
+                alt="How Much Is Left Logo" 
+                className="w-32 h-32 object-contain rounded-[22px] select-none pointer-events-none filter drop-shadow-[0_0_15px_rgba(78,222,163,0.5)] brightness-110"
+              />
+            </div>
           </div>
         </div>
 
-        {/* Text Typography Reveals */}
-        <div className="flex flex-col items-center justify-center gap-1.5 mt-2">
+        {/* Text Typography Reveals - fade and slide down slightly on exit */}
+        <div 
+          className={`absolute top-[calc(50%+60px)] left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center gap-1.5 text-center transition-all duration-700 ${
+            isFadingOut ? 'opacity-0 translate-y-4' : 'opacity-100'
+          }`}
+        >
           <h2 className="text-zinc-100 text-2xl font-extrabold tracking-widest uppercase text-tracking-expand opacity-0 font-sans">
             how much is left
           </h2>
@@ -212,7 +229,9 @@ export default function SplashScreen({ forcePlay = false, onComplete }: SplashSc
       </div>
 
       {/* 4. Sleek Loading Micro-Bar indicator */}
-      <div className="absolute bottom-12 w-32 h-[2px] bg-zinc-900 rounded-full overflow-hidden">
+      <div className={`absolute bottom-12 w-32 h-[2px] bg-zinc-900 rounded-full overflow-hidden transition-opacity duration-700 ${
+        isFadingOut ? 'opacity-0' : 'opacity-100'
+      }`}>
         <div className="h-full bg-gradient-to-r from-[#4edea3] to-emerald-400 rounded-full w-full origin-left scale-x-0 animate-in fade-in fill-mode-forwards"
           style={{
             animation: 'scaleX 3.5s cubic-bezier(0.1, 0.85, 0.25, 1) forwards',
