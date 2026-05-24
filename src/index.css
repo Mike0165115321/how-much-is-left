@@ -89,3 +89,18 @@ body {
   animation: pulseRing 2.2s cubic-bezier(0.25, 0, 0, 1) infinite;
 }
 
+/* Safe area padding & margin helpers for notch & home-indicator spacing on iOS PWAs */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mt-safe {
+  margin-top: env(safe-area-inset-top, 0px);
+}
+.mb-safe {
+  margin-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+

@@ -16,6 +16,14 @@
 
 **How Much Is Left?** is a highly customized, ultra-premium personal financial tracking application. Built with a "silent yet alive" design ethos, it provides a gorgeous, interactive overview of your financial flow. From beautiful welcome transitions to dynamic ambient breathing backdrops, it elevates budget allocation and savings tracking into an elegant, tactile experience.
 
+### 📱 Platform Compatibility / ระบบปฏิบัติการที่รองรับ
+
+| Platform / ระบบปฏิบัติการ | Installation Method / วิธีการติดตั้ง | Format / รูปแบบไฟล์ |
+| :--- | :--- | :--- |
+| **Android 🤖** | Download APK from **GitHub Releases** or Install via Google Chrome (PWA) | `.apk` file / Web Install |
+| **iOS (iPhone/iPad) 🍏** | Open in **Safari** browser ➔ **Add to Home Screen** (PWA) | Web Install (No file needed) |
+| **Desktop & Web 💻** | Instant access on all modern browsers (Chrome, Safari, Edge, Firefox) | Direct Web Link |
+
 Runs as a native **Android Application** (via Capacitor) or installs instantly as an offline **Progressive Web App (PWA)** on both iOS and Android.
 
 ---
@@ -101,7 +109,33 @@ graph TD
 
 ---
 
-## ⚙️ Compilation & Deployment
+## ⚙️ Compilation, Release & Installation
+
+The application is built on a unified codebase. You do **not** need separate code folders for Android and iOS! You can distribute it in two ways:
+
+1. **Direct Android APK**: Share the compiled `how-much-is-left.apk` file (e.g. via Google Drive/OneDrive) so Android users can install it instantly.
+2. **Unified PWA Web App**: Deploy your built files to the web for free. **This is the ONLY and BEST way to support iOS (iPhone/iPad) users** as well as Android users who prefer not to download an APK. When iOS Safari users open your link, a custom in-app **iOS Install Guide** will slide up and show them exactly how to install it.
+
+---
+
+### 📲 Mobile Installation Guide
+
+#### 🍏 For iOS (iPhone & iPad)
+iOS users can install the application in 3 quick steps:
+1. Open your deployed website URL in the native **Safari** browser (e.g. `https://your-app.vercel.app`).
+2. Tap the **Share** button on Safari's bottom toolbar (square icon with an upward arrow).
+3. Scroll down and select **"Add to Home Screen"** (เพิ่มไปยังหน้าจอโฮม). 
+
+*The application will instantly install as a full-screen, standalone app on the Home Screen, loading offline via its service worker cache.*
+
+#### 🤖 For Android
+Android users have two convenient installation options:
+* **Option A (Easy Web Install)**: Open the deployed website URL in **Google Chrome**, wait for Chrome to prompt "Add to Home Screen", or tap the three dots in Chrome and select **"Install App"**.
+* **Option B (Direct APK)**: Download and run the `how-much-is-left.apk` file on your device.
+
+---
+
+### 🚀 How to Build & Deploy
 
 <details>
 <summary><b>📱 Build Native Android APK</b></summary>
@@ -127,18 +161,21 @@ graph TD
 </details>
 
 <details>
-<summary><b>🌐 Setup PWA & Free Web Hosting (Vercel)</b></summary>
+<summary><b>🌐 Host the Web App for Free (Vercel)</b></summary>
 
-1. **Verify PWA Assets**: Confirm `/public/manifest.json` and `/public/sw.js` are in place.
-2. **Compile production build:**
+Deploying to the web allows anyone (especially iOS users) to access and install the app:
+1. **Compile production build:**
    ```bash
    npm run build
    ```
-3. **Deploy instantly for FREE:**
+   *(This builds all optimized, production-ready static files into the `dist` folder).*
+2. **Deploy instantly for FREE:**
+   Install Vercel's CLI and deploy:
    ```bash
-   npx vercel --prod
+   npm install -g vercel
+   vercel
    ```
-   *Follow the quick CLI instructions to log in. Your secure, offline-ready web app will be live instantly!*
+   *Follow the quick CLI instructions to log in. Point the project root to this repository, and it will automatically deploy the built `dist` folder. Your secure, offline-ready web app will be live with a custom URL instantly!*
 </details>
 
 ---

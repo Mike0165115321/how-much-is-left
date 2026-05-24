@@ -31,13 +31,30 @@ self.addEventListener('activate', (e) => {
 });
 
 self.addEventListener('fetch', (e) => {
-  // Simple cache-first or network-fallback strategy
+  // Only cache GET requests
+  if (e.request.method !== 'GET') return;
+
   e.respondWith(
     caches.match(e.request).then((cachedResponse) => {
       if (cachedResponse) {
         return cachedResponse;
       }
-      return fetch(e.request).catch(() => {
+
+      return fetch(e.request).then((networkResponse) => {
+        // Check if we received a valid response to cache
+        if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic') {
+          return networkResponse;
+        }
+
+        // Clone the response because the stream can only be consumed once
+        const responseToCache = networkResponse.clone();
+
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(e.request, responseToCache);
+        });
+
+        return networkResponse;
+      }).catch(() => {
         // Fallback for offline navigation if fetching fails
         if (e.request.mode === 'navigate') {
           return caches.match('/');

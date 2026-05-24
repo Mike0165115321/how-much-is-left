@@ -17,6 +17,7 @@ import LumpSumsPage from './app/more/lump-sums/page';
 import GoalsPage from './app/more/goals/page';
 import CategoriesPage from './app/more/categories/page';
 import SplashScreen from './components/SplashScreen';
+import IOSInstallPrompt from './components/IOSInstallPrompt';
 
 export default function App() {
   const { 
@@ -314,6 +315,7 @@ export default function App() {
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col relative max-w-xl mx-auto border-x border-zinc-950/60 shadow-2xl bg-black overflow-hidden">
       <SplashScreen forcePlay={forceSplash} onComplete={() => setForceSplash(false)} />
+      <IOSInstallPrompt />
       
       {/* 🌌 living ambient floating backdrops */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
@@ -323,14 +325,14 @@ export default function App() {
       </div>
       
       {/* Screen view target mounts */}
-      <div className="flex-1 flex flex-col pb-26 overflow-x-hidden z-10 relative">
+      <div className="flex-1 flex flex-col pb-26 overflow-x-hidden z-10 relative pt-safe">
         <div key={currentScreen} className="flex-1 flex flex-col animate-screen-mount">
           {renderCurrentScreen()}
         </div>
       </div>
 
       {/* Bottom high-contrast Navigation Bar representing universal triggers */}
-      <nav className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-black border-t border-zinc-900/80 px-6 h-20 flex justify-around items-center z-40 pb-safe shadow-[0_-10px_35px_rgba(0,0,0,0.85)]">
+      <nav className="fixed bottom-0 left-0 right-0 max-w-xl mx-auto bg-black border-t border-zinc-900/80 px-6 min-h-20 flex justify-around items-center z-40 pb-safe shadow-[0_-10px_35px_rgba(0,0,0,0.85)]">
         
         {/* Tab 1: Dashboard */}
         <button 
