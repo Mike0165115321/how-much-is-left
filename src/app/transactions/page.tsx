@@ -26,6 +26,39 @@ export default function TransactionsPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'date-desc' | 'date-asc' | 'amount-desc' | 'amount-asc'>('date-desc');
 
+  // 1. Scroll to top on screen mount
+  React.useEffect(() => {
+    window.scrollTo(0, 0);
+    const scrollContainer = document.querySelector('#transactions_screen main') || document.querySelector('main');
+    if (scrollContainer) {
+      scrollContainer.scrollTo(0, 0);
+    }
+  }, []);
+
+  // 2. Sanitize selected category filter if it is invalid for the active filter type
+  React.useEffect(() => {
+    if (selectedCategory === 'all') return;
+    const incomeIds = ['cat-salary', 'cat-bonus', 'cat-investment', 'cat-business', 'cat-other-income', 'cat-project'];
+    const isIncomeCat = incomeIds.includes(selectedCategory);
+    
+    if (filterType === 'expense' && isIncomeCat) {
+      setSelectedCategory('all');
+    } else if (filterType === 'income' && !isIncomeCat) {
+      setSelectedCategory('all');
+    }
+  }, [filterType, selectedCategory]);
+
+  // 3. Dynamically filter categories shown in selection bar based on current active filterType
+  const filteredCategoriesForBar = useMemo(() => {
+    const incomeIds = ['cat-salary', 'cat-bonus', 'cat-investment', 'cat-business', 'cat-other-income', 'cat-project'];
+    if (filterType === 'income') {
+      return categories.filter(c => incomeIds.includes(c.id));
+    } else if (filterType === 'expense') {
+      return categories.filter(c => !incomeIds.includes(c.id));
+    }
+    return categories; // 'all' displays everything
+  }, [categories, filterType]);
+
   // Format date helper
   const formatDateLabel = (dateStr: string) => {
     const today = new Date().toISOString().split('T')[0];
@@ -176,46 +209,44 @@ export default function TransactionsPage() {
             </select>
           </div>
 
-          {/* Extended Category Select pills — mobile-friendly horizontal pills */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+          {/* Extended Category Select pills — redesigned, highly compact mobile scrollable tag list */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
             {/* "All" pill */}
             <button
               onClick={() => setSelectedCategory('all')}
-              className={`flex items-center gap-2 px-4 h-11 rounded-2xl shrink-0 border transition-all duration-200 active:scale-95 ${
+              className={`flex items-center gap-1.5 px-3 h-8 rounded-lg shrink-0 border text-[11.5px] font-bold transition-all duration-150 active:scale-95 cursor-pointer ${
                 selectedCategory === 'all'
-                  ? 'bg-zinc-100 border-zinc-100 shadow-[0_0_16px_rgba(255,255,255,0.15)]'
-                  : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                  ? 'bg-zinc-100 border-zinc-100 text-black shadow-[0_0_12px_rgba(255,255,255,0.1)]'
+                  : 'bg-zinc-950/40 border-zinc-900/60 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800 hover:bg-zinc-900/40'
               }`}
             >
-              <span className="text-lg leading-none">🗂️</span>
-              <span className={`text-[13px] font-bold tracking-tight ${
-                selectedCategory === 'all' ? 'text-black' : 'text-zinc-400'
-              }`}>
+              <span className="text-sm shrink-0 leading-none">🗂️</span>
+              <span className="tracking-tight uppercase">
                 {language === 'TH' ? 'ทั้งหมด' : 'All'}
               </span>
             </button>
 
             {/* Category pills */}
-            {categories.map((cat) => {
+            {filteredCategoriesForBar.map((cat) => {
               const isActive = selectedCategory === cat.id;
+              const isIncomeCat = ['cat-salary', 'cat-bonus', 'cat-investment', 'cat-business', 'cat-other-income', 'cat-project'].includes(cat.id);
               return (
                 <button
                   key={cat.id}
                   onClick={() => setSelectedCategory(cat.id)}
-                  className={`flex items-center gap-2 px-4 h-11 rounded-2xl shrink-0 border transition-all duration-200 active:scale-95 ${
-                    isActive ? 'border-transparent' : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'
+                  className={`flex items-center gap-1.5 px-3 h-8 rounded-lg shrink-0 border text-[11.5px] font-bold transition-all duration-150 active:scale-95 cursor-pointer ${
+                    isActive 
+                      ? isIncomeCat 
+                        ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-400' 
+                        : 'bg-rose-950/30 border-rose-500/40 text-rose-400'
+                      : 'bg-zinc-950/40 border-zinc-900/60 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800 hover:bg-zinc-900/40'
                   }`}
                   style={isActive ? {
-                    background: `${cat.color}1a`,
-                    borderColor: `${cat.color}55`,
-                    boxShadow: `0 0 16px ${cat.color}25`,
+                    boxShadow: `0 0 12px ${isIncomeCat ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)'}`,
                   } : {}}
                 >
-                  <span className="text-lg leading-none">{cat.emoji}</span>
-                  <span
-                    className="text-[13px] font-bold tracking-tight"
-                    style={{ color: isActive ? cat.color : '#a1a1aa' }}
-                  >
+                  <span className="text-sm shrink-0 leading-none">{cat.emoji}</span>
+                  <span className="tracking-tight uppercase">
                     {language === 'TH' ? cat.nameTH : cat.nameEN}
                   </span>
                 </button>
