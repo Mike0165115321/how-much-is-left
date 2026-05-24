@@ -16,7 +16,6 @@ import ReportsPage from './app/reports/page';
 import LumpSumsPage from './app/more/lump-sums/page';
 import GoalsPage from './app/more/goals/page';
 import CategoriesPage from './app/more/categories/page';
-import TrueMoneySyncPage from './app/more/truemoney-sync/page';
 import SplashScreen from './components/SplashScreen';
 
 export default function App() {
@@ -272,23 +271,6 @@ export default function App() {
             </button>
           </div>
 
-          {/* Card 3: Flow Capture Integration */}
-          <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:border-[#4edea3]/30 transition-all">
-            <h3 className="font-bold text-[#4edea3] text-sm flex items-center gap-2">
-              ⚡ {language === 'TH' ? 'เชื่อมกับบัญชีเงินจริง (Flow Capture)' : 'Real Money Account Sync'}
-            </h3>
-            <p className="text-xs text-zinc-500 leading-normal">
-              {language === 'TH' 
-                ? 'ติดตามความเคลื่อนไหวจากข้อความแจ้งเตือน หรือ SMS ของบัญชีธนาคารและกระเป๋าเงินจริงของคุณ (Krungthai NEXT, K PLUS, SCB, TrueMoney, KKP Mobile) แบบออฟไลน์ปลอดภัย 100%' 
-                : 'Instantly connect and parse transaction logs from your real bank accounts or SMS alerts (Krungthai, K PLUS, SCB, TrueMoney, KKP Mobile) locally.'}
-            </p>
-            <button 
-              onClick={() => setCurrentScreen('truemoney-sync')}
-              className="mt-2 w-full py-3 bg-[#4edea3]/10 border border-[#4edea3]/20 hover:border-[#4edea3]/40 text-[#4edea3] hover:bg-[#4edea3]/15 font-bold rounded-xl text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
-            >
-              🔌 {language === 'TH' ? 'เปิดระบบเชื่อมต่อบัญชีเงินจริง' : 'Open Real Account Sync'}
-            </button>
-          </div>
         </main>
       </div>
     );
@@ -316,8 +298,7 @@ export default function App() {
         return <CategoriesPage />;
       case 'settings':
         return renderSettingsScreen();
-      case 'truemoney-sync':
-        return <TrueMoneySyncPage onBack={() => setCurrentScreen('settings')} />;
+
       default:
         return <div className="text-zinc-500 p-10 text-center">404 - Screen Not Found</div>;
     }
