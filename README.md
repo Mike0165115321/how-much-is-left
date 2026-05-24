@@ -21,10 +21,10 @@
 | Platform / ระบบปฏิบัติการ | Installation Method / วิธีการติดตั้ง | Format / รูปแบบไฟล์ |
 | :--- | :--- | :--- |
 | **Android 🤖** | Download APK from **GitHub Releases** or Install via Google Chrome (PWA) | `.apk` file / Web Install |
-| **iOS (iPhone/iPad) 🍏** | Open in **Safari** browser ➔ **Add to Home Screen** (PWA) | Web Install (No file needed) |
-| **Desktop & Web 💻** | Instant access on all modern browsers (Chrome, Safari, Edge, Firefox) | Direct Web Link |
+| **iOS (iPhone/iPad) 🍏** | Open in **Safari** browser ➔ **Add to Home Screen** (PWA) | [Web Install](https://how-much-is-left-eta.vercel.app/) (No file needed) |
+| **Desktop & Web 💻** | Instant access on all modern browsers (Chrome, Safari, Edge, Firefox) | [Direct Web Link](https://how-much-is-left-eta.vercel.app/) |
 
-Runs as a native **Android Application** (via Capacitor) or installs instantly as an offline **Progressive Web App (PWA)** on both iOS and Android.
+Runs as a native **Android Application** (via Capacitor) or installs instantly as an offline **Progressive Web App (PWA)** on both iOS and Android. You can access the live official web application here: **[how-much-is-left-eta.vercel.app](https://how-much-is-left-eta.vercel.app/)** 🌐✨
 
 ---
 
@@ -122,7 +122,7 @@ The application is built on a unified codebase. You do **not** need separate cod
 
 #### 🍏 For iOS (iPhone & iPad)
 iOS users can install the application in 3 quick steps:
-1. Open your deployed website URL in the native **Safari** browser (e.g. `https://your-app.vercel.app`).
+1. Open the official website **[how-much-is-left-eta.vercel.app](https://how-much-is-left-eta.vercel.app/)** in the native **Safari** browser.
 2. Tap the **Share** button on Safari's bottom toolbar (square icon with an upward arrow).
 3. Scroll down and select **"Add to Home Screen"** (เพิ่มไปยังหน้าจอโฮม). 
 
@@ -130,7 +130,7 @@ iOS users can install the application in 3 quick steps:
 
 #### 🤖 For Android
 Android users have two convenient installation options:
-* **Option A (Easy Web Install)**: Open the deployed website URL in **Google Chrome**, wait for Chrome to prompt "Add to Home Screen", or tap the three dots in Chrome and select **"Install App"**.
+* **Option A (Easy Web Install)**: Open the official website **[how-much-is-left-eta.vercel.app](https://how-much-is-left-eta.vercel.app/)** in **Google Chrome**, wait for Chrome to prompt "Add to Home Screen", or tap the three dots in Chrome and select **"Install App"**.
 * **Option B (Direct APK)**: Download and run the `how-much-is-left.apk` file on your device.
 
 ---
@@ -193,5 +193,5 @@ Deploying to the web allows anyone (especially iOS users) to access and install 
 
 <div align="center">
   <h3>How Much Is Left? — Crafted with ❤️ for financial clarity and premium design.</h3>
-  <p>Download the latest release now: <b><a href="https://github.com/Mike0165115321/how-much-is-left/releases/tag/v1.0.0">v1.0.0 (Release) 📦</a></b></p>
+  <p><b><a href="https://how-much-is-left-eta.vercel.app/">Try Live Web App (PWA) 🌐</a></b> • <b><a href="https://github.com/Mike0165115321/how-much-is-left/releases/tag/v1.0.0">Download Latest Release 📦</a></b></p>
 </div>
