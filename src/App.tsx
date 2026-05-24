@@ -16,6 +16,7 @@ import ReportsPage from './app/reports/page';
 import LumpSumsPage from './app/more/lump-sums/page';
 import GoalsPage from './app/more/goals/page';
 import CategoriesPage from './app/more/categories/page';
+import TrueMoneySyncPage from './app/more/truemoney-sync/page';
 import SplashScreen from './components/SplashScreen';
 
 export default function App() {
@@ -271,25 +272,21 @@ export default function App() {
             </button>
           </div>
 
-          {/* Card 3: Storage & Core data defaults */}
-          <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:border-rose-950 transition-all">
-            <h3 className="font-bold text-rose-450 text-sm flex items-center gap-2">
-              ⚠️ {language === 'TH' ? 'จัดการข้อมูลและประวัติ' : 'Data Integrity'}
+          {/* Card 3: TrueMoney Wallet Integration */}
+          <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:border-orange-500/30 transition-all">
+            <h3 className="font-bold text-[#ff5f00] text-sm flex items-center gap-2">
+              🧡 {language === 'TH' ? 'ซิงค์ TrueMoney Wallet' : 'TrueMoney Wallet'}
             </h3>
             <p className="text-xs text-zinc-500 leading-normal">
-              {language === 'TH' ? 'ต้องการรีเซ็ตข้อมูลธุรกรรมและกองกระเป๋าเป้าหมายทั้งหมดกลับไปเป็นค่าเริ่มต้นหรือไม่?' : 'Delete local financial ledger history logs and fallback to factory defaults.'}
+              {language === 'TH' 
+                ? 'นำเข้าและซิงค์บันทึกรายรับรายจ่ายของคุณจากทรูมันนี่ วอลเล็ทผ่าน Clipboard หรือนำเข้ารายงานยอดเงิน' 
+                : 'Import and sync transaction history records from TrueMoney Wallet locally and offline.'}
             </p>
             <button 
-              onClick={() => {
-                if (confirm(language === 'TH' ? 'คุณแน่ใจหรือไม่ที่จะรีเซ็ตข้อมูลทั้งหมด? การดำเนินการนี้ไม่สามารถย้อนกลับได้ค่ะ' : 'Are you absolutely sure you want to restore default mocks? All current entries will be erased.')) {
-                  resetToDefault();
-                  alert(language === 'TH' ? 'รีเซ็ตข้อมูลเป็นค่าเริ่มต้นเรียบร้อยแล้วค่ะ' : 'Data store restored successfully.');
-                  setCurrentScreen('dashboard');
-                }
-              }}
-              className="mt-2 w-full py-3 bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/15 font-bold rounded-xl text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
+              onClick={() => setCurrentScreen('truemoney-sync')}
+              className="mt-2 w-full py-3 bg-orange-500/10 border border-orange-500/20 hover:border-orange-500/40 text-[#ff5f00] hover:bg-orange-500/15 font-bold rounded-xl text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
             >
-              🔄 {language === 'TH' ? 'ล้างข้อมูลและเริ่มต้นใหม่' : 'Reset to Default Ledger'}
+              🔌 {language === 'TH' ? 'เปิดระบบเชื่อมต่อ TrueMoney' : 'Open TrueMoney Sync Hub'}
             </button>
           </div>
         </main>
@@ -319,6 +316,8 @@ export default function App() {
         return <CategoriesPage />;
       case 'settings':
         return renderSettingsScreen();
+      case 'truemoney-sync':
+        return <TrueMoneySyncPage onBack={() => setCurrentScreen('settings')} />;
       default:
         return <div className="text-zinc-500 p-10 text-center">404 - Screen Not Found</div>;
     }

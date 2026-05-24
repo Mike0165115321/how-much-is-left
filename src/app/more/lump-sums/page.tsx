@@ -171,7 +171,7 @@ export default function LumpSumsPage() {
             {/* Circular progress percentages chart ring representation */}
             <section className="flex flex-col items-center justify-center py-4 relative">
               <div 
-                className="w-60 h-60 rounded-full flex items-center justify-center shadow-lg transform active:scale-98 transition-all"
+                className="w-48 h-48 sm:w-56 sm:h-56 rounded-full flex items-center justify-center shadow-lg transform active:scale-98 transition-all"
                 style={{
                   background: `conic-gradient(
                     #fda4af 0% ${chartStats.spentPercentage}%, 

@@ -112,26 +112,29 @@ export default function ReportsPage() {
     const percentageExp = (totalExp / combinedTotal) * 100;
 
     const segments = [];
+    const circumference = 2 * Math.PI * 38; // ~238.761
     let offset = 0;
 
     if (percentageInc > 0) {
+      const strokeLength = (percentageInc / 100) * circumference;
       segments.push({
         id: 'inc-segment',
         color: '#4edea3',
         percentage: percentageInc,
-        strokeDasharray: `${percentageInc} ${100 - percentageInc}`,
-        strokeDashoffset: 100 - offset,
+        strokeDasharray: `${strokeLength} ${circumference - strokeLength}`,
+        strokeDashoffset: circumference - ((offset / 100) * circumference),
       });
       offset += percentageInc;
     }
 
     if (percentageExp > 0) {
+      const strokeLength = (percentageExp / 100) * circumference;
       segments.push({
         id: 'exp-segment',
         color: '#ff7875',
         percentage: percentageExp,
-        strokeDasharray: `${percentageExp} ${100 - percentageExp}`,
-        strokeDashoffset: 100 - offset,
+        strokeDasharray: `${strokeLength} ${circumference - strokeLength}`,
+        strokeDashoffset: circumference - ((offset / 100) * circumference),
       });
       offset += percentageExp;
     }
@@ -179,6 +182,7 @@ export default function ReportsPage() {
       const data = [];
       for (let i = 5; i >= 0; i--) {
         const d = new Date();
+        d.setDate(1); // Fix JS Date setMonth subtraction rollover bug by setting date of month to 1st first!
         d.setMonth(d.getMonth() - i);
         const year = d.getFullYear();
         const month = d.getMonth();
@@ -360,7 +364,7 @@ export default function ReportsPage() {
         {/* SECTION 1: Compact donut + stats row */}
         <section className="bg-[#121212]/30 border border-zinc-900 rounded-2xl p-3 sm:p-5 w-full">
           {/* Row: donut (left) + net/income/expense (right) */}
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-5">
             {/* Compact Donut */}
             <div className="relative w-28 h-28 shrink-0 flex items-center justify-center">
               <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
@@ -392,7 +396,7 @@ export default function ReportsPage() {
             </div>
 
             {/* Stats stack (right side) */}
-            <div className="flex-1 flex flex-col gap-2">
+            <div className="w-full sm:flex-1 flex flex-col gap-2">
               <div className="bg-[#121212] border border-zinc-900 rounded-xl px-3 py-2 flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <ArrowUpRight className="w-3.5 h-3.5 text-[#4edea3]" />
@@ -485,14 +489,14 @@ export default function ReportsPage() {
                   <div 
                     title={`Income: ${formatCurrency(data.income)}`}
                     className="w-2 bg-[#4edea3] rounded-t-sm transition-all duration-700 hover:opacity-85" 
-                    style={{ height: `${data.percentageInc}%` }}
+                    style={{ height: `${(data.percentageInc / 100) * 80}px` }}
                   />
 
                   {/* Expense column (Red/Rose accent) */}
                   <div 
                     title={`Expense: ${formatCurrency(data.expense)}`}
                     className="w-2 bg-[#ff7875] rounded-t-sm transition-all duration-700 hover:opacity-85" 
-                    style={{ height: `${data.percentageExp}%` }}
+                    style={{ height: `${(data.percentageExp / 100) * 80}px` }}
                   />
 
                 </div>
