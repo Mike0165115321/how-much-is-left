@@ -235,7 +235,7 @@ export const useFinanceStore = create<FinanceState>()(
           type: 'income',
           amount: lump.amount,
           categoryId: 'cat-bonus', // default windfall category
-          note: `[Lump Sum] ${lump.title}`,
+          note: get().language === 'TH' ? `[เงินก้อน] ${lump.title}` : `[Lump Sum] ${lump.title}`,
           date: lump.date,
         };
 
@@ -289,7 +289,7 @@ export const useFinanceStore = create<FinanceState>()(
                   type: 'expense',
                   amount: alloc.amount,
                   categoryId: 'cat-utilities', // default utility
-                  note: `[Spent] ${alloc.title}`,
+                  note: get().language === 'TH' ? `[จ่ายจากเงินก้อน] ${alloc.title}` : `[Spent] ${alloc.title}`,
                   date: new Date().toISOString().split('T')[0],
                 };
                 nextTransactions = [addedTx, ...nextTransactions];

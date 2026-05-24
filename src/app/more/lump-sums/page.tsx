@@ -244,62 +244,82 @@ export default function LumpSumsPage() {
       </header>
 
       {/* Main Allocator space */}
-      <main className="flex-grow px-6 py-4 max-w-xl mx-auto w-full flex flex-col gap-6">
+      <main className="flex-grow px-4 py-3 max-w-xl mx-auto w-full flex flex-col gap-4">
 
         {activeLump ? (
           <>
             {/* Header info widget details of active wind fall */}
-            <div className="py-2 mt-2">
-              <span className="text-sm font-semibold text-zinc-500">{activeLump.title}</span>
-              <h2 className="text-4xl font-extrabold text-[#4edea3] tracking-tight mt-1 font-mono">
-                {formatCurrency(activeLump.amount)}
-              </h2>
+            <div className="py-1 mt-1 flex justify-between items-end border-b border-zinc-900 pb-2">
+              <div>
+                <span className="text-xs font-semibold text-zinc-500">{activeLump.title}</span>
+                <h2 className="text-2xl font-extrabold text-[#4edea3] tracking-tight mt-0.5 font-mono">
+                  {formatCurrency(activeLump.amount)}
+                </h2>
+              </div>
+              <span className="text-xs text-zinc-500 font-mono font-medium">
+                {activeLump.date}
+              </span>
             </div>
 
             {/* Circular progress percentages chart ring representation */}
-            <section className="flex flex-col items-center justify-center py-4 relative">
+            <section className="flex items-center justify-center gap-5 py-3 px-4 bg-zinc-900/10 border border-zinc-900/60 rounded-xl relative">
               <div 
-                className="w-36 h-36 sm:w-44 sm:h-44 rounded-full flex items-center justify-center shadow-lg transform active:scale-98 transition-all"
+                className="w-24 h-24 shrink-0 rounded-full flex items-center justify-center shadow-lg transform active:scale-98 transition-all"
                 style={{
                   background: conicGradientStyle
                 }}
               >
                 {/* Hole masking center */}
                 <div className="w-[85%] h-[85%] bg-[#000000] rounded-full flex flex-col items-center justify-center relative border border-zinc-900">
-                  <span className="text-[9px] font-bold text-zinc-500 uppercase tracking-widest font-mono">
-                    {language === 'TH' ? 'เงินส่วนที่ยังไม่จัดสรร' : 'Unmanaged'}
+                  <span className="text-[8px] font-bold text-zinc-500 uppercase tracking-widest font-mono text-center leading-none">
+                    {language === 'TH' ? 'ยังไม่จัดสรร' : 'Unmanaged'}
                   </span>
-                  <span className="text-lg font-bold font-mono text-zinc-100 mt-0.5">
+                  <span className="text-sm font-bold font-mono text-zinc-100 mt-0.5">
                     {formatCurrency(chartStats.unmanaged)}
                   </span>
                 </div>
               </div>
 
-              {/* Legends with detail keys */}
-              <div className="flex gap-x-4 gap-y-1.5 mt-4 justify-center flex-wrap">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-rose-300" />
-                  <span className="text-xs text-zinc-400 font-medium">
-                    {language === 'TH' ? `ใช้ไปแล้ว (${chartStats.spentPercentage}%)` : `Spent (${chartStats.spentPercentage}%)`}
+              {/* Legends with detail keys and actual percentages */}
+              <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-2 border-b border-zinc-900/40 pb-0.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-rose-300 shrink-0" />
+                    <span className="text-[10px] text-zinc-400 font-medium truncate">
+                      {language === 'TH' ? 'ใช้ไปแล้ว' : 'Spent'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold font-mono text-rose-300 shrink-0">
+                    {chartStats.spentPercentage}%
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-gradient-to-r from-[#4edea3] via-[#c084fc] to-[#fbbf24]" />
-                  <span className="text-xs text-zinc-400 font-medium">
-                    {language === 'TH' ? `จัดสรรรอใช้ (${chartStats.allocPercentage}%)` : `Allocated (${chartStats.allocPercentage}%)`}
+                <div className="flex items-center justify-between gap-2 border-b border-zinc-900/40 pb-0.5">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-gradient-to-r from-[#4edea3] via-[#c084fc] to-[#fbbf24] shrink-0" />
+                    <span className="text-[10px] text-zinc-400 font-medium truncate">
+                      {language === 'TH' ? 'จัดสรรรอใช้' : 'Allocated'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold font-mono text-[#4edea3] shrink-0">
+                    {chartStats.allocPercentage}%
                   </span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-zinc-800" />
-                  <span className="text-xs text-zinc-400 font-medium">
-                    {language === 'TH' ? `ไม่มีการจัดสรร (${chartStats.unmanagedPercentage}%)` : `Unmanaged (${chartStats.unmanagedPercentage}%)`}
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span className="w-2 h-2 rounded-full bg-zinc-800 shrink-0" />
+                    <span className="text-[10px] text-zinc-400 font-medium truncate">
+                      {language === 'TH' ? 'ยังไม่จัดสรร' : 'Unallocated'}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold font-mono text-zinc-500 shrink-0">
+                    {chartStats.unmanagedPercentage}%
                   </span>
                 </div>
               </div>
             </section>
 
             {/* List of custom allocations */}
-            <section className="flex flex-col gap-3">
+            <section className="flex flex-col gap-2">
               <div className="flex justify-between items-center mb-1">
                 <h3 className="text-sm font-bold tracking-wide text-zinc-400">
                   {language === 'TH' ? 'รายละเอียดการจัดสรรเงินก้อน' : 'Allocations'}
@@ -406,7 +426,7 @@ export default function LumpSumsPage() {
               {activeLump.allocations.map((alloc) => (
                 <div 
                   key={alloc.id}
-                  className={`p-4 pl-6 rounded-xl flex items-center justify-between transition-all border relative overflow-hidden ${
+                  className={`p-2.5 pl-4 pr-2.5 rounded-xl flex items-center justify-between transition-all border relative overflow-hidden ${
                     alloc.status === 'spent' 
                       ? 'bg-zinc-900/30 border-zinc-950/40 opacity-70' 
                       : 'bg-[#121212] border-zinc-900 hover:border-zinc-850'
@@ -414,24 +434,24 @@ export default function LumpSumsPage() {
                 >
                   {/* Left Color Indicator Bar */}
                   <div 
-                    className="absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl transition-all duration-300"
+                    className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl transition-all duration-300"
                     style={{ backgroundColor: alloc.color || '#4edea3' }}
                   />
 
-                  <div className="flex items-center gap-2">
-                    <div className="flex flex-col">
-                      <span className="font-semibold text-zinc-200 text-sm">{alloc.title}</span>
-                      <span className={`text-[10px] font-bold uppercase tracking-wide flex items-center gap-1 mt-1 font-mono ${
+                  <div className="flex items-center gap-2 min-w-0 flex-1 pr-2">
+                    <div className="flex flex-col min-w-0">
+                      <span className="font-semibold text-zinc-200 text-xs sm:text-sm truncate">{alloc.title}</span>
+                      <span className={`text-[9px] font-bold uppercase tracking-wide flex items-center gap-1 mt-0.5 font-mono ${
                         alloc.status === 'spent' ? 'text-rose-400' : 'text-amber-500'
                       }`}>
                         {alloc.status === 'spent' ? (
                           <>
-                            <CheckCircle className="w-3.5 h-3.5 inline" />
+                            <CheckCircle className="w-3 h-3 inline" />
                             {language === 'TH' ? 'ใช้แล้ว' : 'Spent'}
                           </>
                         ) : (
                           <>
-                            <Clock className="w-3.5 h-3.5 inline" />
+                            <Clock className="w-3 h-3 inline" />
                             {language === 'TH' ? 'รอดำเนินการ' : 'Pending'}
                           </>
                         )}
@@ -439,8 +459,8 @@ export default function LumpSumsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-col items-end gap-2">
-                    <span className="font-bold text-md text-zinc-100 font-mono">
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span className="font-bold text-sm text-zinc-100 font-mono">
                       {formatCurrency(alloc.amount)}
                     </span>
                     
@@ -448,14 +468,14 @@ export default function LumpSumsPage() {
                       {/* Delete Allocation Button */}
                       <button
                         onClick={() => deleteAllocationFromLumpSum(activeLump.id, alloc.id)}
-                        className="text-zinc-500 hover:text-rose-400 p-2.5 rounded-lg transition-colors cursor-pointer hover:bg-zinc-950/60 active:scale-90"
+                        className="text-zinc-500 hover:text-rose-455 p-2 rounded-lg transition-colors cursor-pointer hover:bg-zinc-950/60 active:scale-90"
                         title={language === 'TH' ? 'ลบรายการจัดสรร' : 'Delete Allocation'}
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3.5 h-3.5" />
                       </button>
 
-                      {/* Toggle switch with action trigger (Larger mobile hit target area) */}
-                      <label className="inline-flex items-center cursor-pointer p-2.5 -mr-2 select-none">
+                      {/* Toggle switch with action trigger */}
+                      <label className="inline-flex items-center cursor-pointer p-2 select-none">
                         <input 
                           type="checkbox" 
                           checked={alloc.status === 'spent'}
