@@ -13,6 +13,10 @@ import {
 import Dashboard from './app/page';
 import TransactionsPage from './app/transactions/page';
 import ReportsPage from './app/reports/page';
+import LumpSumsPage from './app/more/lump-sums/page';
+import GoalsPage from './app/more/goals/page';
+import CategoriesPage from './app/more/categories/page';
+import SplashScreen from './components/SplashScreen';
 
 export default function App() {
   const { 
@@ -28,8 +32,11 @@ export default function App() {
   } = useFinanceStore();
 
   // Navigation Routing States
-  // 'dashboard' | 'transactions' | 'reports' | 'more' | 'lump-sums' | 'goals' | 'categories'
+  // 'dashboard' | 'transactions' | 'reports' | 'more' | 'lump-sums' | 'goals' | 'categories' | 'settings'
   const [currentScreen, setCurrentScreen] = useState<string>('dashboard');
+
+  // Splash screen state
+  const [forceSplash, setForceSplash] = useState<boolean>(false);
 
   // Auto goal allocation states
   const [isAllocating, setIsAllocating] = useState<boolean>(false);
@@ -195,6 +202,101 @@ export default function App() {
     setShowAddTxModal(false);
   };
 
+  // Custom Settings Screen
+  const renderSettingsScreen = () => {
+    return (
+      <div className="flex flex-col flex-1 pb-10 px-6 py-8 animate-in fade-in duration-300" id="settings_screen">
+        <header className="flex items-center gap-4 mb-8">
+          <button 
+            onClick={() => setCurrentScreen('dashboard')}
+            className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-zinc-100 hover:border-zinc-700 active:scale-95 transition-all cursor-pointer font-bold outline-none"
+          >
+            ←
+          </button>
+          <div>
+            <span className="text-zinc-500 text-[10px] uppercase tracking-widest font-mono">
+              {language === 'TH' ? 'ตั้งค่าแอปพลิเคชัน' : 'App Configuration'}
+            </span>
+            <h1 className="text-2xl font-bold text-zinc-100 mt-1 tracking-tight">
+              {language === 'TH' ? 'การตั้งค่า' : 'Settings'}
+            </h1>
+          </div>
+        </header>
+
+        <main className="flex flex-col gap-6 flex-grow">
+          {/* Card 1: Language preference */}
+          <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:border-zinc-850 transition-all">
+            <h3 className="font-bold text-zinc-200 text-sm flex items-center gap-2">
+              🌐 {language === 'TH' ? 'ภาษาหลัก / Language' : 'Preferred Language'}
+            </h3>
+            <p className="text-xs text-zinc-500 leading-normal">
+              {language === 'TH' ? 'เลือกแสดงผลข้อมูลแอปพลิเคชันเป็นภาษาไทยหรือภาษาอังกฤษ' : 'Choose application default layout display text languages.'}
+            </p>
+            <div className="flex gap-2.5 bg-zinc-950 p-[3px] rounded-xl border border-zinc-900 mt-1">
+              <button 
+                onClick={() => setLanguage('TH')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  language === 'TH' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                ภาษาไทย (TH)
+              </button>
+              <button 
+                onClick={() => setLanguage('EN')}
+                className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  language === 'EN' ? 'bg-zinc-800 text-zinc-100' : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                English (EN)
+              </button>
+            </div>
+          </div>
+
+          {/* Card 2: Micro-interactions & Intro (SPLASH SCREEN DEMO!) */}
+          <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:border-zinc-850 transition-all">
+            <h3 className="font-bold text-zinc-200 text-sm flex items-center gap-2">
+              ✨ {language === 'TH' ? 'อนิเมชั่นและเอฟเฟกต์' : 'Visuals & Motion'}
+            </h3>
+            <p className="text-xs text-zinc-500 leading-normal">
+              {language === 'TH' ? 'สัมผัสความพรีเมียมของระบบแอนิเมชันเปิดตัวแอปพลิเคชันเวอร์ชันเต็มรูปแบบ' : 'Experience high fidelity transitions and premium introductory welcome flows.'}
+            </p>
+            <button 
+              onClick={() => {
+                setForceSplash(true);
+                setCurrentScreen('dashboard');
+              }}
+              className="mt-2 w-full py-3 bg-[#4edea3]/10 border border-[#4edea3]/25 hover:border-[#4edea3]/45 text-[#4edea3] hover:bg-[#4edea3]/15 font-bold rounded-xl text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
+            >
+              🎬 {language === 'TH' ? 'เล่นอนิเมชั่นต้อนรับอีกครั้ง' : 'Replay Intro Welcome'}
+            </button>
+          </div>
+
+          {/* Card 3: Storage & Core data defaults */}
+          <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:border-rose-950 transition-all">
+            <h3 className="font-bold text-rose-450 text-sm flex items-center gap-2">
+              ⚠️ {language === 'TH' ? 'จัดการข้อมูลและประวัติ' : 'Data Integrity'}
+            </h3>
+            <p className="text-xs text-zinc-500 leading-normal">
+              {language === 'TH' ? 'ต้องการรีเซ็ตข้อมูลธุรกรรมและกองกระเป๋าเป้าหมายทั้งหมดกลับไปเป็นค่าเริ่มต้นหรือไม่?' : 'Delete local financial ledger history logs and fallback to factory defaults.'}
+            </p>
+            <button 
+              onClick={() => {
+                if (confirm(language === 'TH' ? 'คุณแน่ใจหรือไม่ที่จะรีเซ็ตข้อมูลทั้งหมด? การดำเนินการนี้ไม่สามารถย้อนกลับได้ค่ะ' : 'Are you absolutely sure you want to restore default mocks? All current entries will be erased.')) {
+                  resetToDefault();
+                  alert(language === 'TH' ? 'รีเซ็ตข้อมูลเป็นค่าเริ่มต้นเรียบร้อยแล้วค่ะ' : 'Data store restored successfully.');
+                  setCurrentScreen('dashboard');
+                }
+              }}
+              className="mt-2 w-full py-3 bg-rose-500/10 border border-rose-500/20 hover:border-rose-500/40 text-rose-400 hover:bg-rose-500/15 font-bold rounded-xl text-xs transition-all active:scale-[0.98] cursor-pointer flex items-center justify-center gap-2 uppercase tracking-wide"
+            >
+              🔄 {language === 'TH' ? 'ล้างข้อมูลและเริ่มต้นใหม่' : 'Reset to Default Ledger'}
+            </button>
+          </div>
+        </main>
+      </div>
+    );
+  };
+
   // Render proper screen by routing key
   const renderCurrentScreen = () => {
     switch (currentScreen) {
@@ -209,11 +311,18 @@ export default function App() {
         return <TransactionsPage />;
       case 'reports':
         return <ReportsPage />;
+      case 'lump-sums':
+        return <LumpSumsPage />;
+      case 'goals':
+        return <GoalsPage />;
+      case 'categories':
+        return <CategoriesPage />;
+      case 'settings':
+        return renderSettingsScreen();
       default:
         return <div className="text-zinc-500 p-10 text-center">404 - Screen Not Found</div>;
     }
   };
-
 
   const getModalAmountFormatted = () => {
     if (txModalAmount === '0') return '0';
@@ -224,6 +333,7 @@ export default function App() {
 
   return (
     <div className="min-h-screen text-zinc-100 flex flex-col relative max-w-xl mx-auto border-x border-zinc-950/60 shadow-2xl bg-black">
+      <SplashScreen forcePlay={forceSplash} onComplete={() => setForceSplash(false)} />
       
       {/* Screen view target mounts */}
       <div className="flex-1 flex flex-col pb-26 overflow-x-hidden">
