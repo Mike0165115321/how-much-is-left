@@ -83,8 +83,8 @@ export default function ReportsPage() {
         type: 'expense' as const,
         amount,
         percentage,
-        nameEN: cat?.nameEN || 'Other',
-        nameTH: cat?.nameTH || 'อื่นๆ',
+        nameEN: cat?.nameEN || catId,
+        nameTH: cat?.nameTH || catId,
         emoji: cat?.emoji || '💸',
         color: '#ff7875',
       };
@@ -99,8 +99,8 @@ export default function ReportsPage() {
         type: 'income' as const,
         amount,
         percentage,
-        nameEN: cat?.nameEN || 'Other',
-        nameTH: cat?.nameTH || 'อื่นๆ',
+        nameEN: cat?.nameEN || catId,
+        nameTH: cat?.nameTH || catId,
         emoji: cat?.emoji || '💵',
         color: '#4edea3',
       };
@@ -115,8 +115,8 @@ export default function ReportsPage() {
         type: 'savings' as const,
         amount,
         percentage,
-        nameEN: cat?.nameEN || 'Savings',
-        nameTH: cat?.nameTH || 'เงินออม',
+        nameEN: cat?.nameEN || catId,
+        nameTH: cat?.nameTH || catId,
         emoji: cat?.emoji || '📈',
         color: '#38bdf8',
       };

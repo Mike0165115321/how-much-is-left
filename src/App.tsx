@@ -401,262 +401,231 @@ export default function App() {
       {showAddTxModal && (
         <div 
           id="add_tx_modal_overlay"
-          className="fixed inset-0 bg-black z-50 flex flex-col max-w-xl mx-auto border-x border-zinc-950 shadow-2xl"
+          className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
         >
-          {/* ── STICKY TOP: close + toggle + amount ── */}
-          <div className="shrink-0 px-5 pt-4 pb-3 border-b border-zinc-900 bg-black">
-            {/* Row 1: close + toggle */}
-            <div className="flex justify-between items-center mb-3">
-              <button 
-                id="close_tx_modal_btn"
-                onClick={() => setShowAddTxModal(false)}
-                className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center active:scale-95 transition-all cursor-pointer"
-              >
-                <X className="w-5 h-5 text-zinc-400" />
-              </button>
-
-              <div className="bg-zinc-900 p-[3px] rounded-full flex border border-zinc-850 shadow-inner">
+          <div className="bg-[#0c0c0c] border border-zinc-850 max-w-md w-full rounded-3xl flex flex-col shadow-[0_20px_50px_rgba(0,0,0,0.7)] animate-in zoom-in-95 duration-200 overflow-hidden text-left">
+            {/* ── HEADER & AMOUNT BLOCK ── */}
+            <div className="shrink-0 p-5 pb-4 border-b border-zinc-900 bg-zinc-950/40">
+              {/* Row 1: close + toggle */}
+              <div className="flex justify-between items-center mb-4">
                 <button 
-                  type="button"
-                  onClick={() => { setTxModalType('expense'); setTxModalCategory(language === 'TH' ? 'อาหาร' : 'Food'); }}
-                  className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
-                    txModalType === 'expense' ? 'bg-zinc-800 text-[#ff7875] shadow' : 'text-zinc-450 hover:text-zinc-300'
-                  }`}
+                  id="close_tx_modal_btn"
+                  onClick={() => setShowAddTxModal(false)}
+                  className="w-9 h-9 rounded-full bg-zinc-900 border border-zinc-800 hover:border-zinc-700 flex items-center justify-center active:scale-95 transition-all cursor-pointer"
                 >
-                  {language === 'TH' ? 'รายจ่าย' : 'Expense'}
+                  <X className="w-4 h-4 text-zinc-400" />
                 </button>
-                <button 
-                  type="button"
-                  onClick={() => { setTxModalType('income'); setTxModalCategory(language === 'TH' ? 'เงินเดือน' : 'Salary'); }}
-                  className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
-                    txModalType === 'income' ? 'bg-zinc-800 text-[#4edea3] shadow' : 'text-zinc-450 hover:text-zinc-300'
-                  }`}
-                >
-                  {language === 'TH' ? 'รายได้' : 'Income'}
-                </button>
-              </div>
 
-              <div className="w-10 h-10" />
-            </div>
-
-            {/* Row 2: Amount — always visible */}
-            <div className="flex items-center justify-center font-mono tracking-wider bg-[#121212]/40 border border-zinc-900 rounded-2xl py-2.5 px-4 shadow-inner">
-              <span className={`text-2xl font-extrabold mr-1.5 select-none ${
-                txModalType === 'expense' ? 'text-[#ff7875]/60' : 'text-[#4edea3]/60'
-              }`}>฿</span>
-              <input 
-                id="tx_modal_amount_input"
-                type="text"
-                inputMode="decimal"
-                value={txModalAmount === '0' ? '' : getModalAmountFormatted()}
-                onChange={(e) => handleModalAmountChange(e.target.value)}
-                placeholder="0"
-                className={`bg-transparent border-none text-4xl font-extrabold tracking-tight text-center outline-none focus:ring-0 w-full min-w-0 ${
-                  txModalType === 'expense'
-                    ? 'text-[#ff7875] placeholder-[#ff7875]/30'
-                    : 'text-[#4edea3] placeholder-[#4edea3]/30'
-                }`}
-                autoFocus
-              />
-            </div>
-          </div>
-
-          {/* ── SCROLLABLE MIDDLE: category + note + goal ── */}
-          <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
-            {/* Category Text Input & Auto Suggestions */}
-            <div className="flex flex-col gap-1.5 text-left">
-              <span className="text-[12.5px] font-bold text-zinc-400 block mb-1 px-1">
-                {txModalType === 'income'
-                  ? (language === 'TH' ? 'แหล่งที่มาของรายรับ (หมวดหมู่)' : 'Income Category / Source')
-                  : (language === 'TH' ? 'ประเภทของรายจ่าย (หมวดหมู่)' : 'Expense Category')}
-              </span>
-              <div className="relative flex items-center bg-[#121212] border border-zinc-900 hover:border-zinc-850 rounded-xl px-4 py-3.5 transition-all">
-                <span className="absolute left-4 text-zinc-555 text-lg pointer-events-none select-none">🏷️</span>
-                <input 
-                  id="tx_modal_category_input"
-                  type="text"
-                  value={txModalCategory}
-                  onChange={(e) => setTxModalCategory(e.target.value)}
-                  placeholder={
-                    txModalType === 'income'
-                      ? (language === 'TH' ? 'ระบุแหล่งที่มา... (เช่น เงินเดือน, ขายของ)' : 'Enter source... (e.g. Salary, Business)')
-                      : (language === 'TH' ? 'ระบุประเภทรายจ่าย... (เช่น อาหาร, ค่าน้ำ, ค่าซ่อมรถ)' : 'Enter category... (e.g. Food, Taxi, Repair)')
-                  }
-                  className="w-full bg-transparent border-none text-zinc-100 placeholder-zinc-750 outline-none pl-7 text-sm focus:ring-0"
-                />
-                {txModalCategory && (
+                <div className="bg-zinc-900 p-[3px] rounded-full flex border border-zinc-850 shadow-inner">
                   <button 
                     type="button"
-                    onClick={() => setTxModalCategory('')}
-                    className="text-zinc-500 hover:text-zinc-300 transition-colors p-1"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-
-              {/* Suggestions Grid */}
-              <div className="mt-2.5">
-                <span className="text-[11px] font-bold text-zinc-550 block mb-2 px-1">
-                  {language === 'TH' ? '💡 แนะนำตามที่คุณพิมพ์บ่อย:' : '💡 Frequently Used Suggestions:'}
-                </span>
-                <div className="grid grid-cols-4 gap-2 px-1">
-                  {categorySuggestions.map((sug) => {
-                    const isActive = txModalCategory.trim() === sug;
-                    return (
-                      <button
-                        key={sug}
-                        type="button"
-                        onClick={() => setTxModalCategory(sug)}
-                        className={`h-9 px-1 rounded-xl border text-[11.5px] font-bold transition-all duration-150 active:scale-95 cursor-pointer truncate text-center ${
-                          isActive
-                            ? txModalType === 'income'
-                              ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]'
-                              : 'bg-rose-950/30 border-rose-500/40 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.1)]'
-                            : 'bg-zinc-950/40 border-zinc-900/60 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
-                        }`}
-                      >
-                        {sug}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            </div>
-
-            {/* Note Input */}
-            <div className="flex flex-col gap-1 text-left">
-              <span className="text-[12.5px] font-bold text-zinc-400 block mb-1.5 px-1">
-                {language === 'TH' ? 'บันทึกช่วยจำ (โน้ตย่อ)' : 'Note / Description'}
-              </span>
-              <div className="relative flex items-center bg-[#121212] border border-zinc-900 hover:border-zinc-850 rounded-xl px-4 py-3.5">
-                <Edit2 className="w-4 h-4 text-zinc-555 absolute left-4 pointer-events-none" />
-                <input 
-                  id="tx_modal_note_input"
-                  type="text"
-                  value={txModalNote}
-                  onChange={(e) => setTxModalNote(e.target.value)}
-                  placeholder={language === 'TH' ? 'ระบุโน้ตช่วยจำ... (เช่น ทานซูชิ, เงินเดือนออก)' : 'What was this transaction for?'}
-                  className="w-full bg-transparent border-none text-zinc-100 placeholder-zinc-750 outline-none pl-7 text-sm focus:ring-0"
-                />
-              </div>
-            </div>
-
-            {/* Goal Allocation (income only) */}
-            {txModalType === 'income' && goals.length > 0 && (
-              <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-4 flex flex-col gap-3 text-left">
-                <div className="flex justify-between items-center select-none">
-                  <span className="text-[12.5px] font-bold text-zinc-350 flex items-center gap-1.5 select-none">
-                    🎯 {language === 'TH' ? 'โอนออมเงินเข้าเป้าหมายโดยตรง?' : 'Allocate to Savings Goal?'}
-                  </span>
-                  <button 
-                    type="button"
-                    onClick={() => setIsAllocating(!isAllocating)}
-                    className={`px-3 py-1 rounded-full text-[11px] font-extrabold transition-all border cursor-pointer ${
-                      isAllocating 
-                        ? 'bg-[#4edea3]/10 text-[#4edea3] border-[#4edea3]/30' 
-                        : 'bg-zinc-950 border-zinc-850 text-zinc-555'
+                    onClick={() => { setTxModalType('expense'); setTxModalCategory(language === 'TH' ? 'อาหาร' : 'Food'); }}
+                    className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all w-24 uppercase ${
+                      txModalType === 'expense' ? 'bg-zinc-800 text-[#ff7875] shadow' : 'text-zinc-450 hover:text-zinc-300'
                     }`}
                   >
-                    {isAllocating ? (language === 'TH' ? 'เปิดใช้งาน' : 'Enabled') : (language === 'TH' ? 'ปิดอยู่' : 'Disabled')}
+                    {language === 'TH' ? 'รายจ่าย' : 'Expense'}
+                  </button>
+                  <button 
+                    type="button"
+                    onClick={() => { setTxModalType('income'); setTxModalCategory(language === 'TH' ? 'รายได้' : 'Income'); }}
+                    className={`px-5 py-1.5 rounded-full text-xs font-bold transition-all w-24 uppercase ${
+                      txModalType === 'income' ? 'bg-zinc-800 text-[#4edea3] shadow' : 'text-zinc-450 hover:text-zinc-300'
+                    }`}
+                  >
+                    {language === 'TH' ? 'รายได้' : 'Income'}
                   </button>
                 </div>
 
-                {isAllocating && (
-                  <div className="flex flex-col gap-3 animate-in fade-in duration-200">
-                    <div className="flex flex-col gap-1">
-                      <span className="text-[11.5px] font-bold text-zinc-400 block mb-1.5 text-left">
-                        {language === 'TH' ? 'เลือกกองเป้าหมายการออม' : 'Select Goal Pocket'}
-                      </span>
-                      <select 
-                        value={allocatedGoalId}
-                        onChange={(e) => setAllocatedGoalId(e.target.value)}
-                        className="w-full bg-zinc-950 border border-zinc-850 rounded-lg py-2 px-3 text-xs text-zinc-200 outline-none focus:border-[#4edea3] font-mono color-scheme-dark h-9"
-                      >
-                        {goals.map(g => (
-                          <option key={g.id} value={g.id}>
-                            {g.title} ({language === 'TH' ? 'ขาดอีก' : 'Left:'} {formatCurrency(Math.max(0, g.targetAmount - g.currentAmount))})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setAllocationPortion(100)}
-                        className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg border transition-all cursor-pointer ${
-                          allocationPortion === 100
-                            ? 'bg-zinc-900 border-[#4edea3]/40 text-[#4edea3]'
-                            : 'bg-zinc-950 border-zinc-850 text-zinc-500 hover:text-zinc-300'
-                        }`}
-                      >
-                        {language === 'TH' ? 'โอนทั้งหมด (100%)' : 'All (100%)'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setAllocationPortion(50)}
-                        className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg border transition-all cursor-pointer font-mono ${
-                          allocationPortion === 50
-                            ? 'bg-zinc-900 border-[#4edea3]/40 text-[#4edea3]'
-                            : 'bg-zinc-950 border-zinc-850 text-zinc-500 hover:text-zinc-300'
-                        }`}
-                      >
-                        {language === 'TH' ? 'แบ่งครึ่งหนึ่ง (50%)' : 'Half (50%)'}
-                      </button>
-                    </div>
-                  </div>
-                )}
+                <div className="w-9 h-9" />
               </div>
-            )}
-          </div>
 
-          {/* ── FIXED BOTTOM: numpad + save ── */}
-          <div className="shrink-0 px-5 pt-3 pb-5 border-t border-zinc-900 bg-black flex flex-col gap-2.5">
-            {/* Numpad */}
-            <div className="grid grid-cols-3 gap-2 select-none">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map((num) => (
-                <button
-                  key={num}
-                  onClick={() => handleNumpadPress(num)}
-                  className="h-12 font-mono font-bold text-center text-2xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 border border-transparent transition-all cursor-pointer"
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                onClick={() => handleNumpadPress('.')}
-                className="h-12 font-mono font-bold text-center text-3xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
-              >
-                .
-              </button>
-              <button
-                onClick={() => handleNumpadPress('0')}
-                className="h-12 font-mono font-bold text-center text-2xl text-zinc-100 flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
-              >
-                0
-              </button>
-              <button
-                id="numpad_delete_btn"
-                onClick={handleNumpadDelete}
-                className="h-12 text-[#ff7875] flex items-center justify-center rounded-2xl bg-zinc-950 hover:bg-zinc-900 active:bg-zinc-800 active:scale-95 transition-all cursor-pointer"
-              >
-                <span className="text-sm font-bold font-mono tracking-wider uppercase">⌫ Delete</span>
-              </button>
+              {/* Row 2: Amount Input */}
+              <div className="flex items-center justify-center font-mono tracking-wider bg-zinc-950 border border-zinc-900 rounded-2xl py-3 px-4 shadow-inner">
+                <span className={`text-2xl font-extrabold mr-2 select-none ${
+                  txModalType === 'expense' ? 'text-[#ff7875]/60' : 'text-[#4edea3]/60'
+                }`}>฿</span>
+                <input 
+                  id="tx_modal_amount_input"
+                  type="text"
+                  inputMode="decimal"
+                  value={txModalAmount === '0' ? '' : getModalAmountFormatted()}
+                  onChange={(e) => handleModalAmountChange(e.target.value)}
+                  placeholder="0"
+                  className={`bg-transparent border-none text-4xl font-extrabold tracking-tight text-center outline-none focus:ring-0 w-full min-w-0 ${
+                    txModalType === 'expense'
+                      ? 'text-[#ff7875] placeholder-[#ff7875]/20'
+                      : 'text-[#4edea3] placeholder-[#4edea3]/20'
+                  }`}
+                  autoFocus
+                />
+              </div>
             </div>
 
-            {/* Save button */}
-            <button 
-              id="save_transaction_action"
-              onClick={handleSaveTransaction}
-              className={`w-full font-bold py-4 rounded-xl flex justify-center items-center active:scale-[0.98] transition-all duration-150 cursor-pointer text-md tracking-wide uppercase font-semibold ${
-                txModalType === 'expense'
-                  ? 'bg-[#ff7875] text-black shadow-[0_0_35px_rgba(255,120,117,0.2)]'
-                  : 'bg-[#4edea3] text-[#003824] shadow-[0_0_35px_rgba(78,222,163,0.18)]'
-              }`}
-            >
-              {language === 'TH' ? 'บันทึกรายการธุรกรรม' : 'Save Transaction'}
-            </button>
+            {/* ── SCROLLABLE MIDDLE: category + note + goal ── */}
+            <div className="flex-1 overflow-y-auto p-5 space-y-5 max-h-[50vh] no-scrollbar">
+              {/* Category Text Input & Auto Suggestions */}
+              <div className="flex flex-col gap-1.5 text-left">
+                <span className="text-[12.5px] font-bold text-zinc-400 block px-1">
+                  {txModalType === 'income'
+                    ? (language === 'TH' ? 'แหล่งที่มาของรายรับ (หมวดหมู่)' : 'Income Category / Source')
+                    : (language === 'TH' ? 'ประเภทของรายจ่าย (หมวดหมู่)' : 'Expense Category')}
+                </span>
+                <div className="relative flex items-center bg-zinc-950 border border-zinc-900 hover:border-zinc-850 rounded-xl px-4 py-3.5 transition-all">
+                  <span className="absolute left-4 text-zinc-555 text-lg pointer-events-none select-none">🏷️</span>
+                  <input 
+                    id="tx_modal_category_input"
+                    type="text"
+                    value={txModalCategory}
+                    onChange={(e) => setTxModalCategory(e.target.value)}
+                    placeholder={
+                      txModalType === 'income'
+                        ? (language === 'TH' ? 'ระบุแหล่งที่มา... (เช่น เงินเดือน, ขายของ)' : 'Enter source... (e.g. Salary, Business)')
+                        : (language === 'TH' ? 'ระบุประเภทรายจ่าย... (เช่น อาหาร, ค่าน้ำ, ค่าซ่อมรถ)' : 'Enter category... (e.g. Food, Taxi, Repair)')
+                    }
+                    className="w-full bg-transparent border-none text-zinc-100 placeholder-zinc-750 outline-none pl-7 text-sm focus:ring-0"
+                  />
+                  {txModalCategory && (
+                    <button 
+                      type="button"
+                      onClick={() => setTxModalCategory('')}
+                      className="text-zinc-500 hover:text-zinc-300 transition-colors p-1"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+
+                {/* Suggestions Grid */}
+                <div className="mt-2.5">
+                  <span className="text-[11px] font-bold text-zinc-550 block mb-2 px-1">
+                    {language === 'TH' ? '💡 แนะนำตามที่คุณพิมพ์บ่อย:' : '💡 Frequently Used Suggestions:'}
+                  </span>
+                  <div className="grid grid-cols-4 gap-2 px-1">
+                    {categorySuggestions.map((sug) => {
+                      const isActive = txModalCategory.trim() === sug;
+                      return (
+                        <button
+                          key={sug}
+                          type="button"
+                          onClick={() => setTxModalCategory(sug)}
+                          className={`h-9 px-1 rounded-xl border text-[11.5px] font-bold transition-all duration-150 active:scale-95 cursor-pointer truncate text-center ${
+                            isActive
+                              ? txModalType === 'income'
+                                ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+                                : 'bg-rose-950/30 border-rose-500/40 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.1)]'
+                              : 'bg-zinc-950/40 border-zinc-900/60 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
+                          }`}
+                        >
+                          {sug}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              {/* Note Input */}
+              <div className="flex flex-col gap-1 text-left">
+                <span className="text-[12.5px] font-bold text-zinc-400 block px-1">
+                  {language === 'TH' ? 'บันทึกช่วยจำ (โน้ตย่อ)' : 'Note / Description'}
+                </span>
+                <div className="relative flex items-center bg-zinc-950 border border-zinc-900 hover:border-zinc-850 rounded-xl px-4 py-3.5">
+                  <Edit2 className="w-4 h-4 text-zinc-555 absolute left-4 pointer-events-none" />
+                  <input 
+                    id="tx_modal_note_input"
+                    type="text"
+                    value={txModalNote}
+                    onChange={(e) => setTxModalNote(e.target.value)}
+                    placeholder={language === 'TH' ? 'ระบุโน้ตช่วยจำ... (เช่น ทานซูชิ, เงินเดือนออก)' : 'What was this transaction for?'}
+                    className="w-full bg-transparent border-none text-zinc-100 placeholder-zinc-750 outline-none pl-7 text-sm focus:ring-0"
+                  />
+                </div>
+              </div>
+
+              {/* Goal Allocation (income only) */}
+              {txModalType === 'income' && goals.length > 0 && (
+                <div className="bg-[#121212] border border-zinc-900 rounded-2xl p-4 flex flex-col gap-3 text-left">
+                  <div className="flex justify-between items-center select-none">
+                    <span className="text-[12.5px] font-bold text-zinc-350 flex items-center gap-1.5 select-none">
+                      🎯 {language === 'TH' ? 'โอนออมเงินเข้าเป้าหมายโดยตรง?' : 'Allocate to Savings Goal?'}
+                    </span>
+                    <button 
+                      type="button"
+                      onClick={() => setIsAllocating(!isAllocating)}
+                      className={`px-3 py-1 rounded-full text-[11px] font-extrabold transition-all border cursor-pointer ${
+                        isAllocating 
+                          ? 'bg-[#4edea3]/10 text-[#4edea3] border-[#4edea3]/30' 
+                          : 'bg-zinc-950 border-zinc-850 text-zinc-555'
+                      }`}
+                    >
+                      {isAllocating ? (language === 'TH' ? 'เปิดใช้งาน' : 'Enabled') : (language === 'TH' ? 'ปิดอยู่' : 'Disabled')}
+                    </button>
+                  </div>
+
+                  {isAllocating && (
+                    <div className="flex flex-col gap-3 animate-in fade-in duration-200">
+                      <div className="flex flex-col gap-1">
+                        <span className="text-[11.5px] font-bold text-zinc-400 block mb-1.5 text-left">
+                          {language === 'TH' ? 'เลือกกองเป้าหมายการออม' : 'Select Goal Pocket'}
+                        </span>
+                        <select 
+                          value={allocatedGoalId}
+                          onChange={(e) => setAllocatedGoalId(e.target.value)}
+                          className="w-full bg-zinc-950 border border-zinc-850 rounded-lg py-2 px-3 text-xs text-zinc-200 outline-none focus:border-[#4edea3] font-mono color-scheme-dark h-9"
+                        >
+                          {goals.map(g => (
+                            <option key={g.id} value={g.id}>
+                              {g.title} ({language === 'TH' ? 'ขาดอีก' : 'Left:'} {formatCurrency(Math.max(0, g.targetAmount - g.currentAmount))})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setAllocationPortion(100)}
+                          className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg border transition-all cursor-pointer ${
+                            allocationPortion === 100
+                              ? 'bg-zinc-900 border-[#4edea3]/40 text-[#4edea3]'
+                              : 'bg-zinc-950 border-zinc-850 text-zinc-555 hover:text-zinc-300'
+                          }`}
+                        >
+                          {language === 'TH' ? 'โอนทั้งหมด (100%)' : 'All (100%)'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setAllocationPortion(50)}
+                          className={`flex-1 py-1.5 text-xs font-extrabold rounded-lg border transition-all cursor-pointer font-mono ${
+                            allocationPortion === 50
+                              ? 'bg-zinc-900 border-[#4edea3]/40 text-[#4edea3]'
+                              : 'bg-zinc-950 border-zinc-850 text-zinc-555 hover:text-zinc-300'
+                          }`}
+                        >
+                          {language === 'TH' ? 'แบ่งครึ่งหนึ่ง (50%)' : 'Half (50%)'}
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* ── FIXED BOTTOM: SAVE BUTTON ── */}
+            <div className="shrink-0 p-5 border-t border-zinc-900 bg-zinc-950/40">
+              <button 
+                id="save_transaction_action"
+                onClick={handleSaveTransaction}
+                className={`w-full font-bold py-4 rounded-xl flex justify-center items-center active:scale-[0.98] transition-all duration-150 cursor-pointer text-sm tracking-wide uppercase font-semibold ${
+                  txModalType === 'expense'
+                    ? 'bg-[#ff7875] text-black shadow-[0_0_35px_rgba(255,120,117,0.2)]'
+                    : 'bg-[#4edea3] text-[#003824] shadow-[0_0_35px_rgba(78,222,163,0.18)]'
+                }`}
+              >
+                {language === 'TH' ? 'บันทึกรายการธุรกรรม' : 'Save Transaction'}
+              </button>
+            </div>
           </div>
         </div>
       )}
