@@ -71,10 +71,17 @@ export default function GoalsPage() {
     setNewDeadline(d.toISOString().split('T')[0]);
   };
 
-  // Filter list by selected Tab
-  const filteredGoals = useMemo(() => {
-    return goals.filter(g => g.type === activeTab);
-  }, [goals, activeTab]);
+  const totalSavings = useMemo(() => {
+    return goals.reduce((sum, g) => sum + g.currentAmount, 0);
+  }, [goals]);
+
+  const periodicGoals = useMemo(() => {
+    return goals.filter(g => g.type === 'periodic');
+  }, [goals]);
+
+  const targetGoals = useMemo(() => {
+    return goals.filter(g => g.type === 'target');
+  }, [goals]);
 
   // Handle saving contribution action
   const handleContributeSubmit = () => {
@@ -149,6 +156,93 @@ export default function GoalsPage() {
     }
   };
 
+  const renderGoalCard = (g: Goal) => {
+    const progressRatio = Math.min(100, Math.max(0, (g.currentAmount / g.targetAmount) * 100));
+    const isComp = g.currentAmount >= g.targetAmount;
+    
+    return (
+      <div 
+        key={g.id}
+        className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-4 relative group hover:border-zinc-800 transition-all text-left"
+      >
+        {/* Floating Action Contribute trigger point */}
+        <div className="absolute top-5 right-5 flex items-center gap-1">
+          {!isComp && (
+            <button 
+              onClick={() => setShowContributeModal(g.id)}
+              className="w-8 h-8 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-[#4edea3] rounded-full flex items-center justify-center transition-transform active:scale-95 cursor-pointer"
+              title={language === 'TH' ? 'ส่งเงินออม' : 'Contribute pocket money'}
+            >
+              <Plus className="w-5 h-5" />
+            </button>
+          )}
+          <button 
+            onClick={() => deleteGoal(g.id)}
+            className="w-8 h-8 bg-zinc-950/20 text-zinc-600 hover:text-rose-400 hover:bg-zinc-900 rounded-full flex items-center justify-center transition-colors cursor-pointer"
+            title="Clear goal"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Header content with matching indicators */}
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-zinc-950 flex items-center justify-center border border-zinc-850">
+            {getGoalIcon(g.icon)}
+          </div>
+          <div>
+            <h3 className="font-semibold text-zinc-100 text-sm">{g.title}</h3>
+            <p className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 mt-0.5">
+              {language === 'TH' 
+                ? (g.type === 'periodic' ? 'วนซ้ำรายเดือน' : `เป้าหมาย: ${formatDeadline(g.deadline)}`) 
+                : (g.type === 'periodic' ? 'Monthly Recurring' : `Due: ${formatDeadline(g.deadline)}`)}
+            </p>
+          </div>
+        </div>
+
+        {/* Pricing breakdown metrics row */}
+        <div className="flex justify-between items-end mt-1">
+          <div className="flex flex-col">
+            <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">
+              {language === 'TH' ? 'มูลค่าเป้าหมาย' : 'Target Budget'}
+            </span>
+            <span className="text-xl font-bold font-mono text-zinc-200 mt-1">
+              {formatCurrency(g.targetAmount)}
+            </span>
+          </div>
+
+          <div className="text-right">
+            <span className="text-xs font-semibold text-[#4edea3] block">
+              {language === 'TH' ? `ออมแล้ว ${formatCurrency(g.currentAmount)}` : `Saved ${formatCurrency(g.currentAmount)}`}
+            </span>
+            <span className="text-[10px] text-zinc-500 block mt-1 font-mono">
+              {language === 'TH' ? `ขาดอีก ${formatCurrency(Math.max(0, g.targetAmount - g.currentAmount))}` : `${formatCurrency(Math.max(0, g.targetAmount - g.currentAmount))} remaining`}
+            </span>
+          </div>
+        </div>
+
+        {/* Detailed progress scale indicators */}
+        <div className="flex flex-col gap-1.5 mt-1">
+          <div className="w-full h-2 bg-zinc-950 border border-zinc-900 rounded-full overflow-hidden p-[1px]">
+            <div 
+              className={`h-full rounded-full transition-all duration-750 ${g.type === 'periodic' ? 'bg-[#4edea3]' : 'bg-blue-400'}`}
+              style={{ width: `${progressRatio}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[10px] font-mono font-semibold text-zinc-650">
+            <span>{Math.round(progressRatio)}% Completed</span>
+            {isComp && (
+              <span className="text-[#4edea3] flex items-center gap-1">
+                <Sparkles className="w-3 h-3 inline" />
+                Target Achieved!
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex flex-col flex-1 pb-10" id="goals_screen">
       
@@ -175,136 +269,65 @@ export default function GoalsPage() {
       {/* Main Content Area */}
       <main className="flex-grow px-6 py-4 max-w-xl mx-auto w-full flex flex-col gap-6">
 
-        {/* High-fidelity Segment tabs (Periodic vs Target Goals) */}
-        <div className="bg-[#121212] p-[3px] rounded-full flex relative border border-zinc-800 max-w-sm mx-auto w-full">
-          <button 
-            onClick={() => setActiveTab('periodic')}
-            className={`flex-1 py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
-              activeTab === 'periodic' 
-                ? 'bg-zinc-800 text-zinc-100 shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            {language === 'TH' ? 'เป้าหมายระยะสั้น (รายเดือน)' : 'Periodic Goals'}
-          </button>
-          <button 
-            onClick={() => setActiveTab('target')}
-            className={`flex-1 py-1.5 text-center text-xs font-semibold rounded-full transition-all ${
-              activeTab === 'target' 
-                ? 'bg-zinc-800 text-zinc-100 shadow-sm' 
-                : 'text-zinc-500 hover:text-zinc-300'
-            }`}
-          >
-            {language === 'TH' ? 'เป้าหมายระยะยาว' : 'Target Goals'}
-          </button>
+        {/* Gorgeous Overview Card */}
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-900 rounded-3xl p-6 flex flex-col gap-1.5 shadow-[0_4px_30px_rgba(0,0,0,0.4)] text-left">
+          <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest font-mono">
+            {language === 'TH' ? 'ยอดสะสมเงินออมรวมทุกเป้าหมาย' : 'Total Accumulated Savings'}
+          </span>
+          <div className="flex items-baseline gap-2">
+            <span className="text-3xl font-extrabold text-[#4edea3] font-mono">
+              {formatCurrency(totalSavings)}
+            </span>
+          </div>
+          <p className="text-[11px] text-zinc-500 leading-normal mt-1">
+            {language === 'TH' 
+              ? `มีเป้าหมายการออมทั้งหมด ${goals.length} รายการ`
+              : `You have ${goals.length} active savings pockets.`}
+          </p>
         </div>
 
-        {/* List of custom goals matching active tab */}
-        <div className="flex flex-col gap-4">
-          {filteredGoals.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 text-center">
-              <div className="w-16 h-16 bg-zinc-900 rounded-full flex items-center justify-center text-zinc-650 mb-4 border border-zinc-850">
-                <Target className="w-8 h-8 animate-pulse text-[#4edea3]/60" />
-              </div>
-              <p className="text-zinc-400 font-medium text-sm">
-                {language === 'TH' ? 'ยังไม่มีข้อมูลจำลองหมวดนี้' : 'No goals logged in this category.'}
+        {/* Section 1: Short-term Goals */}
+        <div className="flex flex-col gap-3">
+          <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+            <h3 className="text-sm font-bold text-[#4edea3] flex items-center gap-1.5">
+              <span>🎯</span>
+              <span>{language === 'TH' ? 'เป้าหมายระยะสั้น (รายเดือน)' : 'Periodic / Short-Term'}</span>
+            </h3>
+            <span className="text-[10.5px] font-bold font-mono text-zinc-500">
+              {periodicGoals.length} {language === 'TH' ? 'เป้าหมาย' : 'Goals'}
+            </span>
+          </div>
+          <div className="flex flex-col gap-4">
+            {periodicGoals.length === 0 ? (
+              <p className="text-xs text-zinc-600 text-center py-4">
+                {language === 'TH' ? 'ยังไม่มีเป้าหมายระยะสั้น' : 'No short-term goals.'}
               </p>
-              <button 
-                onClick={() => setShowAddGoalModal(true)}
-                className="mt-6 px-4 py-1.5 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-zinc-300 rounded-lg text-xs"
-              >
-                {language === 'TH' ? 'เริ่มกำหนดเป้าหมายแรกกันเลย' : 'Create First Goal Specification'}
-              </button>
-            </div>
-          ) : (
-            filteredGoals.map((g) => {
-              const progressRatio = Math.min(100, Math.max(0, (g.currentAmount / g.targetAmount) * 100));
-              const isComp = g.currentAmount >= g.targetAmount;
-              
-              return (
-                <div 
-                  key={g.id}
-                  className="bg-[#121212] border border-zinc-900 rounded-2xl p-5 flex flex-col gap-4 relative group hover:border-zinc-800 transition-all"
-                >
-                  {/* Floating Action Contribute trigger point */}
-                  <div className="absolute top-5 right-5 flex items-center gap-1">
-                    {!isComp && (
-                      <button 
-                        onClick={() => setShowContributeModal(g.id)}
-                        className="w-8 h-8 bg-zinc-900 hover:bg-zinc-850 border border-zinc-800 text-[#4edea3] rounded-full flex items-center justify-center transition-transform active:scale-90"
-                        title={language === 'TH' ? 'ส่งเงินออม' : 'Contribute pocket money'}
-                      >
-                        <Plus className="w-5 h-5" />
-                      </button>
-                    )}
-                    <button 
-                      onClick={() => deleteGoal(g.id)}
-                      className="w-8 h-8 bg-zinc-950/20 text-zinc-600 hover:text-rose-400 hover:bg-zinc-900 rounded-full flex items-center justify-center transition-colors"
-                      title="Clear goal"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
+            ) : (
+              periodicGoals.map((g) => renderGoalCard(g))
+            )}
+          </div>
+        </div>
 
-                  {/* Header content with matching indicators */}
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-zinc-950 flex items-center justify-center border border-zinc-850">
-                      {getGoalIcon(g.icon)}
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-zinc-100 text-sm">{g.title}</h3>
-                      <p className="text-[10px] uppercase font-mono tracking-wider text-zinc-500 mt-0.5">
-                        {language === 'TH' 
-                          ? (g.type === 'periodic' ? 'วนซ้ำรายเดือน' : `เป้าหมาย: ${formatDeadline(g.deadline)}`) 
-                          : (g.type === 'periodic' ? 'Monthly Recurring' : `Due: ${formatDeadline(g.deadline)}`)}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Pricing breakdown metrics row */}
-                  <div className="flex justify-between items-end mt-1">
-                    <div className="flex flex-col">
-                      <span className="text-[10px] font-bold text-zinc-500 uppercase tracking-wide">
-                        {language === 'TH' ? 'มูลค่าเป้าหมาย' : 'Target Budget'}
-                      </span>
-                      <span className="text-xl font-bold font-mono text-zinc-200 mt-1">
-                        {formatCurrency(g.targetAmount)}
-                      </span>
-                    </div>
-
-                    <div className="text-right">
-                      <span className="text-xs font-semibold text-[#4edea3] block">
-                        {language === 'TH' ? `ออมแล้ว ${formatCurrency(g.currentAmount)}` : `Saved ${formatCurrency(g.currentAmount)}`}
-                      </span>
-                      <span className="text-[10px] text-zinc-500 block mt-1 font-mono">
-                        {language === 'TH' ? `ขาดอีก ${formatCurrency(Math.max(0, g.targetAmount - g.currentAmount))}` : `${formatCurrency(Math.max(0, g.targetAmount - g.currentAmount))} remaining`}
-                      </span>
-                    </div>
-                  </div>
-
-                  {/* Detailed progress scale indicators */}
-                  <div className="flex flex-col gap-1.5 mt-1">
-                    <div className="w-full h-2 bg-zinc-950 border border-zinc-900 rounded-full overflow-hidden p-[1px]">
-                      <div 
-                        className={`h-full rounded-full transition-all duration-750 ${g.type === 'periodic' ? 'bg-[#4edea3]' : 'bg-blue-400'}`}
-                        style={{ width: `${progressRatio}%` }}
-                      />
-                    </div>
-                    <div className="flex justify-between text-[10px] font-mono font-semibold text-zinc-650">
-                      <span>{Math.round(progressRatio)}% Completed</span>
-                      {isComp && (
-                        <span className="text-[#4edea3] flex items-center gap-1">
-                          <Sparkles className="w-3 h-3 inline" />
-                          Target Achieved!
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                </div>
-              );
-            })
-          )}
+        {/* Section 2: Long-term Goals */}
+        <div className="flex flex-col gap-3">
+          <div className="flex justify-between items-center border-b border-zinc-900 pb-2">
+            <h3 className="text-sm font-bold text-blue-400 flex items-center gap-1.5">
+              <span>🚀</span>
+              <span>{language === 'TH' ? 'เป้าหมายระยะยาว (รายปี/เป้าหมายใหญ่)' : 'Target / Long-Term'}</span>
+            </h3>
+            <span className="text-[10.5px] font-bold font-mono text-zinc-500">
+              {targetGoals.length} {language === 'TH' ? 'เป้าหมาย' : 'Goals'}
+            </span>
+          </div>
+          <div className="flex flex-col gap-4">
+            {targetGoals.length === 0 ? (
+              <p className="text-xs text-zinc-600 text-center py-4">
+                {language === 'TH' ? 'ยังไม่มีเป้าหมายระยะยาว' : 'No long-term goals.'}
+              </p>
+            ) : (
+              targetGoals.map((g) => renderGoalCard(g))
+            )}
+          </div>
         </div>
       </main>
 
