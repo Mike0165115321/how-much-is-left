@@ -58,16 +58,26 @@ export default function TransactionsPage() {
     }
   }, [filterType, selectedCategory]);
 
-  // 3. Dynamically filter categories shown in selection bar based on current active filterType
+  // 3. Dynamically generate list of unique categories present in the active transactions list
   const filteredCategoriesForBar = useMemo(() => {
-    const incomeIds = ['cat-salary', 'cat-bonus', 'cat-investment', 'cat-business', 'cat-other-income', 'cat-project'];
-    if (filterType === 'income') {
-      return categories.filter(c => incomeIds.includes(c.id));
-    } else if (filterType === 'expense') {
-      return categories.filter(c => !incomeIds.includes(c.id));
-    }
-    return categories; // 'all' displays everything
-  }, [categories, filterType]);
+    const activeTxs = transactions.filter(tx => filterType === 'all' || tx.type === filterType);
+    const uniqueCatIds = Array.from(new Set(activeTxs.map(tx => tx.categoryId).filter(Boolean)));
+    
+    return uniqueCatIds.map(id => {
+      const found = categories.find(c => c.id === id);
+      if (found) return found;
+      
+      const isIncome = transactions.find(tx => tx.categoryId === id)?.type === 'income';
+      return {
+        id,
+        nameEN: id,
+        nameTH: id,
+        emoji: isIncome ? '💵' : '🏷️',
+        icon: 'Tag',
+        color: isIncome ? '#4edea3' : '#ff7875'
+      };
+    });
+  }, [transactions, categories, filterType]);
 
   // Format date helper
   const formatDateLabel = (dateStr: string) => {
@@ -305,15 +315,15 @@ export default function TransactionsPage() {
                         <div className="flex items-center gap-3.5">
                           {/* Emoji category frame */}
                           <div className="w-11 h-11 rounded-xl bg-zinc-900 flex items-center justify-center text-xl border border-zinc-800">
-                            {catObj ? catObj.emoji : '💵'}
+                            {catObj ? catObj.emoji : (tx.type === 'income' ? '💵' : '🏷️')}
                           </div>
                           
                           <div className="flex flex-col">
                             <span className="font-semibold text-zinc-200 text-sm leading-tight group-hover:text-zinc-100 transition-colors">
-                              {tx.note || (catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : 'Transaction')}
+                              {tx.note || (catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : tx.categoryId)}
                             </span>
                             <span className="text-[11px] text-zinc-500 font-medium uppercase tracking-wider mt-1">
-                              {catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : 'Other'}
+                              {catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : tx.categoryId}
                             </span>
                           </div>
                         </div>
@@ -356,14 +366,14 @@ export default function TransactionsPage() {
                 >
                   <div className="flex items-center gap-3.5">
                     <div className="w-11 h-11 rounded-xl bg-zinc-900 flex items-center justify-center text-xl border border-zinc-800">
-                      {catObj ? catObj.emoji : '💵'}
+                      {catObj ? catObj.emoji : (tx.type === 'income' ? '💵' : '🏷️')}
                     </div>
                     <div className="flex flex-col">
                       <span className="font-semibold text-zinc-200 text-sm leading-tight">
-                        {tx.note || (catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : 'Transaction')}
+                        {tx.note || (catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : tx.categoryId)}
                       </span>
                       <span className="text-[11px] text-zinc-500 font-medium tracking-wide mt-1">
-                        {catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : 'Other'} • {formatDateLabel(tx.date)}
+                        {catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : tx.categoryId} • {formatDateLabel(tx.date)}
                       </span>
                     </div>
                   </div>

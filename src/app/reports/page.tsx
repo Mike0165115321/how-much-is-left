@@ -671,14 +671,14 @@ export default function ReportsPage() {
                   >
                     <div className="flex items-center gap-3.5">
                       <div className="w-9 h-9 rounded-lg bg-zinc-900 flex items-center justify-center text-xl border border-zinc-850">
-                        {catObj ? catObj.emoji : '🍔'}
+                        {catObj ? catObj.emoji : '🏷️'}
                       </div>
                       <div className="flex flex-col">
                         <span className="font-semibold text-zinc-200 text-sm">
-                          {tx.note || (catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : 'Transaction')}
+                          {tx.note || (catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : tx.categoryId)}
                         </span>
                         <span className="text-[11px] text-zinc-500 font-medium">
-                          {catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : 'Other'} • {tx.date}
+                          {catObj ? (language === 'TH' ? catObj.nameTH : catObj.nameEN) : tx.categoryId} • {tx.date}
                         </span>
                       </div>
                     </div>

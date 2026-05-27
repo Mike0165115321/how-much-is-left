@@ -50,52 +50,41 @@ export default function App() {
   const [showAddTxModal, setShowAddTxModal] = useState<boolean>(false);
   const [txModalType, setTxModalType] = useState<'expense' | 'income'>('expense');
   const [txModalAmount, setTxModalAmount] = useState<string>('0');
-  const [txModalCategoryId, setTxModalCategoryId] = useState<string>('cat-food');
+  const [txModalCategory, setTxModalCategory] = useState<string>('');
   const [txModalNote, setTxModalNote] = useState<string>('');
 
-  // Dynamically filter categories for modal based on Income vs Expense type
-  const filteredCategoriesForModal = React.useMemo(() => {
-    const incomeIds = ['cat-salary', 'cat-bonus', 'cat-investment', 'cat-business', 'cat-other-income', 'cat-project'];
-    if (txModalType === 'income') {
-      return categories.filter(c => 
-        incomeIds.includes(c.id) || 
-        c.id.includes('income') || 
-        c.id.includes('salary') || 
-        c.id.includes('project') || 
-        c.nameEN.toLowerCase().includes('income') ||
-        c.nameEN.toLowerCase().includes('salary') ||
-        c.nameEN.toLowerCase().includes('bonus') ||
-        c.nameEN.toLowerCase().includes('investment') ||
-        c.nameEN.toLowerCase().includes('business') ||
-        c.nameEN.toLowerCase().includes('project') ||
-        c.nameTH.includes('รายได้') ||
-        c.nameTH.includes('เงินเดือน') ||
-        c.nameTH.includes('ลงทุน') ||
-        c.nameTH.includes('ธุรกิจ') ||
-        c.nameTH.includes('โปรเจกต์') ||
-        c.nameTH.includes('โปรเจค')
-      );
-    } else {
-      return categories.filter(c => 
-        !incomeIds.includes(c.id) &&
-        !c.id.includes('income') &&
-        !c.id.includes('salary') &&
-        !c.id.includes('project') &&
-        !c.nameEN.toLowerCase().includes('income') &&
-        !c.nameEN.toLowerCase().includes('salary') &&
-        !c.nameEN.toLowerCase().includes('bonus') &&
-        !c.nameEN.toLowerCase().includes('investment') &&
-        !c.nameEN.toLowerCase().includes('business') &&
-        !c.nameEN.toLowerCase().includes('project') &&
-        !c.nameTH.includes('รายได้') &&
-        !c.nameTH.includes('เงินเดือน') &&
-        !c.nameTH.includes('ลงทุน') &&
-        !c.nameTH.includes('ธุรกิจ') &&
-        !c.nameTH.includes('โปรเจกต์') &&
-        !c.nameTH.includes('โปรเจค')
-      );
-    }
-  }, [categories, txModalType]);
+  // Dynamically derive category suggestions based on actual transactions frequency
+  const categorySuggestions = React.useMemo(() => {
+    // Get unique categories used in transactions for this type
+    const usedCats = transactions
+      .filter(tx => tx.type === txModalType)
+      .map(tx => {
+        const found = categories.find(c => c.id === tx.categoryId);
+        return found ? (language === 'TH' ? found.nameTH : found.nameEN) : tx.categoryId;
+      })
+      .filter(Boolean);
+
+    // Count frequencies
+    const freq: { [key: string]: number } = {};
+    usedCats.forEach(c => { freq[c] = (freq[c] || 0) + 1; });
+
+    // Sort by frequency descending
+    const sortedUsed = Object.keys(freq).sort((a, b) => freq[b] - freq[a]);
+
+    // Starter/default sets for cold starts
+    const defaultExpenses = language === 'TH' 
+      ? ['อาหาร', 'เดินทาง', 'ช้อปปิ้ง', 'ค่าน้ำค่าไฟ', 'บันเทิง', 'ของใช้']
+      : ['Food', 'Transport', 'Shopping', 'Utilities', 'Entertainment', 'General'];
+    const defaultIncomes = language === 'TH'
+      ? ['เงินเดือน', 'เงินพิเศษ', 'ธุรกิจ', 'โปรเจกต์', 'ลงทุน']
+      : ['Salary', 'Bonus', 'Business', 'Project', 'Investment'];
+
+    const starter = txModalType === 'income' ? defaultIncomes : defaultExpenses;
+
+    // Combine and deduplicate
+    const combined = Array.from(new Set([...sortedUsed, ...starter]));
+    return combined.slice(0, 8); // Display top 8 suggestions
+  }, [transactions, txModalType, language, categories]);
 
   // Handle Bottom Navigation tab changes
   const handleTabChange = (tab: string) => {
@@ -107,8 +96,10 @@ export default function App() {
     setTxModalType(initialType);
     setTxModalAmount('0');
     // Set first matching category as default starting state
-    const defaultCat = categories.find(c => initialType === 'income' ? c.id === 'cat-salary' : c.id === 'cat-food');
-    setTxModalCategoryId(defaultCat?.id || 'cat-food');
+    const defaultCat = initialType === 'income' 
+      ? (language === 'TH' ? 'เงินเดือน' : 'Salary') 
+      : (language === 'TH' ? 'อาหาร' : 'Food');
+    setTxModalCategory(defaultCat);
     setTxModalNote('');
     
     // Initialize goal allocation states
@@ -188,7 +179,7 @@ export default function App() {
     addTransaction({
       type: txModalType,
       amount: finalAmount,
-      categoryId: txModalCategoryId,
+      categoryId: txModalCategory.trim() || (language === 'TH' ? 'อื่นๆ' : 'Other'),
       note: txModalNote.trim(),
       date: localDateStr
     });
@@ -427,7 +418,7 @@ export default function App() {
               <div className="bg-zinc-900 p-[3px] rounded-full flex border border-zinc-850 shadow-inner">
                 <button 
                   type="button"
-                  onClick={() => { setTxModalType('expense'); setTxModalCategoryId('cat-food'); }}
+                  onClick={() => { setTxModalType('expense'); setTxModalCategory(language === 'TH' ? 'อาหาร' : 'Food'); }}
                   className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
                     txModalType === 'expense' ? 'bg-zinc-800 text-[#ff7875] shadow' : 'text-zinc-450 hover:text-zinc-300'
                   }`}
@@ -436,7 +427,7 @@ export default function App() {
                 </button>
                 <button 
                   type="button"
-                  onClick={() => { setTxModalType('income'); setTxModalCategoryId('cat-salary'); }}
+                  onClick={() => { setTxModalType('income'); setTxModalCategory(language === 'TH' ? 'เงินเดือน' : 'Salary'); }}
                   className={`px-6 py-2 rounded-full text-[13px] font-bold transition-all w-28 uppercase ${
                     txModalType === 'income' ? 'bg-zinc-800 text-[#4edea3] shadow' : 'text-zinc-450 hover:text-zinc-300'
                   }`}
@@ -472,69 +463,66 @@ export default function App() {
 
           {/* ── SCROLLABLE MIDDLE: category + note + goal ── */}
           <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-4">
-            {/* Category Grid */}
-            {txModalType === 'income' ? (
-              <div className="w-full">
-                <span className="text-[12.5px] font-bold text-zinc-400 block mb-2.5 text-left">
-                  {language === 'TH' ? 'แหล่งที่มาของรายรับ' : 'Income Source Category'}
+            {/* Category Text Input & Auto Suggestions */}
+            <div className="flex flex-col gap-1.5 text-left">
+              <span className="text-[12.5px] font-bold text-zinc-400 block mb-1 px-1">
+                {txModalType === 'income'
+                  ? (language === 'TH' ? 'แหล่งที่มาของรายรับ (หมวดหมู่)' : 'Income Category / Source')
+                  : (language === 'TH' ? 'ประเภทของรายจ่าย (หมวดหมู่)' : 'Expense Category')}
+              </span>
+              <div className="relative flex items-center bg-[#121212] border border-zinc-900 hover:border-zinc-850 rounded-xl px-4 py-3.5 transition-all">
+                <span className="absolute left-4 text-zinc-555 text-lg pointer-events-none select-none">🏷️</span>
+                <input 
+                  id="tx_modal_category_input"
+                  type="text"
+                  value={txModalCategory}
+                  onChange={(e) => setTxModalCategory(e.target.value)}
+                  placeholder={
+                    txModalType === 'income'
+                      ? (language === 'TH' ? 'ระบุแหล่งที่มา... (เช่น เงินเดือน, ขายของ)' : 'Enter source... (e.g. Salary, Business)')
+                      : (language === 'TH' ? 'ระบุประเภทรายจ่าย... (เช่น อาหาร, ค่าน้ำ, ค่าซ่อมรถ)' : 'Enter category... (e.g. Food, Taxi, Repair)')
+                  }
+                  className="w-full bg-transparent border-none text-zinc-100 placeholder-zinc-750 outline-none pl-7 text-sm focus:ring-0"
+                />
+                {txModalCategory && (
+                  <button 
+                    type="button"
+                    onClick={() => setTxModalCategory('')}
+                    className="text-zinc-500 hover:text-zinc-300 transition-colors p-1"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Suggestions Grid */}
+              <div className="mt-2.5">
+                <span className="text-[11px] font-bold text-zinc-550 block mb-2 px-1">
+                  {language === 'TH' ? '💡 แนะนำตามที่คุณพิมพ์บ่อย:' : '💡 Frequently Used Suggestions:'}
                 </span>
-                <div className="grid grid-cols-2 gap-3">
-                  {filteredCategoriesForModal.map((cat) => {
-                    const isActive = txModalCategoryId === cat.id;
+                <div className="grid grid-cols-4 gap-2 px-1">
+                  {categorySuggestions.map((sug) => {
+                    const isActive = txModalCategory.trim() === sug;
                     return (
                       <button
-                        key={cat.id}
-                        onClick={() => setTxModalCategoryId(cat.id)}
-                        className={`flex items-center gap-3 py-3 px-4 rounded-xl border transition-all active:scale-95 cursor-pointer h-[58px] w-full ${
-                          isActive 
-                            ? 'bg-[#121212] border-[#4edea3] shadow-[0_0_15px_rgba(78,222,163,0.2)] scale-[1.02]' 
-                            : 'bg-[#121212]/50 border-zinc-900/60 opacity-60 hover:opacity-90 hover:border-zinc-800'
-                        }`}
+                        key={sug}
                         type="button"
+                        onClick={() => setTxModalCategory(sug)}
+                        className={`h-9 px-1 rounded-xl border text-[11.5px] font-bold transition-all duration-150 active:scale-95 cursor-pointer truncate text-center ${
+                          isActive
+                            ? txModalType === 'income'
+                              ? 'bg-emerald-950/30 border-emerald-500/40 text-emerald-400 shadow-[0_0_12px_rgba(16,185,129,0.1)]'
+                              : 'bg-rose-950/30 border-rose-500/40 text-rose-400 shadow-[0_0_12px_rgba(244,63,94,0.1)]'
+                            : 'bg-zinc-950/40 border-zinc-900/60 text-zinc-500 hover:text-zinc-300 hover:border-zinc-800'
+                        }`}
                       >
-                        <span className="text-2xl shrink-0">{cat.emoji}</span>
-                        <div className="flex flex-col text-left justify-center min-w-0">
-                          <span className="text-[14.5px] font-bold tracking-tight uppercase truncate" style={{ color: isActive ? '#4edea3' : '#e4e4e7' }}>
-                            {language === 'TH' ? cat.nameTH : cat.nameEN}
-                          </span>
-                          <span className="text-[10.5px] text-zinc-500 tracking-wider mt-0.5">
-                            {isActive ? (language === 'TH' ? 'เลือกอยู่' : 'SELECTED') : (language === 'TH' ? 'รายรับ' : 'INCOME')}
-                          </span>
-                        </div>
+                        {sug}
                       </button>
                     );
                   })}
                 </div>
               </div>
-            ) : (
-              <div className="w-full">
-                <span className="text-[12.5px] font-bold text-zinc-400 block mb-2.5 text-left">
-                  {language === 'TH' ? 'ประเภทของรายจ่าย' : 'Expense Category'}
-                </span>
-                <div className="grid grid-cols-4 gap-2">
-                  {filteredCategoriesForModal.map((cat) => {
-                    const isActive = txModalCategoryId === cat.id;
-                    return (
-                      <button
-                        key={cat.id}
-                        onClick={() => setTxModalCategoryId(cat.id)}
-                        className={`flex flex-col items-center justify-center py-3.5 px-1 rounded-xl border transition-all active:scale-95 cursor-pointer h-[88px] ${
-                          isActive 
-                            ? 'bg-[#121212] border-[#ff7875] shadow-[0_0_15px_rgba(255,120,117,0.25)] scale-[1.03]' 
-                            : 'bg-[#121212]/50 border-zinc-900/60 opacity-60 hover:opacity-90 hover:border-zinc-800'
-                        }`}
-                        type="button"
-                      >
-                        <span className="text-2xl mb-1">{cat.emoji}</span>
-                        <span className="text-[13px] font-bold tracking-tight uppercase truncate max-w-full text-center" style={{ color: isActive ? '#ff7875' : '#a1a1aa' }}>
-                          {language === 'TH' ? cat.nameTH : cat.nameEN}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+            </div>
 
             {/* Note Input */}
             <div className="flex flex-col gap-1 text-left">
